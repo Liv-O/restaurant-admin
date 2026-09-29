@@ -11,10 +11,16 @@
   --color-sidebar: #1f2a26;
   --color-accent: #e8b46a;
 
-  --color-status-free: #edf5f0;
-  --color-status-busy: #f8ebda;
-  --color-status-reserved: #e8eff7;
-  --color-status-bill: #f7e4e0;
+  --color-tone-green: #e3eee8;
+  --color-tone-green-ink: #1e4d3c;
+  --color-tone-amber: #f6e7d4;
+  --color-tone-amber-ink: #7a4210;
+  --color-tone-blue: #e0e9f3;
+  --color-tone-blue-ink: #234a70;
+  --color-tone-red: #f7e4e0;
+  --color-tone-red-ink: #7e2b20;
+  --color-tone-gray: #efeae1;
+  --color-tone-gray-ink: #4f4b45;
 
   --font-display: 'Fraunces', serif;
   --font-sans: 'Manrope', system-ui, sans-serif;
