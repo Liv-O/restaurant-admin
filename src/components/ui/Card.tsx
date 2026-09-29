@@ -1,5 +1,5 @@
-import type { HTMLAttributes } from 'react';
+import type { ComponentProps } from 'react';
 
-export default function Card({ className = '', ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={`border-line bg-surface rounded-2xl border ${className}`} {...props} />;
+export default function Card({ className = '', ...props }: ComponentProps<'div'>) {
+  return <div className={`rounded-2xl border border-line bg-surface ${className}`} {...props} />;
 }

@@ -1,10 +1,11 @@
-import { NavLink } from 'react-router';
+import { Link, NavLink } from 'react-router';
 
 import { LuLayoutDashboard } from 'react-icons/lu';
 import { CiBoxes } from 'react-icons/ci';
 import { MdOutlineSoupKitchen } from 'react-icons/md';
 import { MdMenuBook } from 'react-icons/md';
 import { FaRegCalendarCheck } from 'react-icons/fa6';
+import logoUrl from '@/assets/favicon-bell.svg';
 
 const links = [
   { to: '/', label: 'Dashboard', icon: <LuLayoutDashboard /> },
@@ -21,11 +22,13 @@ const links = [
 export default function Sidebar() {
   return (
     <aside className="flex w-60 shrink-0 flex-col bg-sidebar p-4 text-white">
-      <h1 className="mb-8 px-3 font-display text-xl font-semibold">Restaurant Admin</h1>
-      <nav className="flex flex-col gap-1">
+      <Link to="/" className="mb-8 px-3 font-display text-xl font-semibold">
+        <img src={logoUrl} alt="Bellmont" className="mr-2 inline-block h-8 w-8" />
+        Bellmont
+      </Link>
+      <nav className="flex flex-col gap-1" aria-label="Sidebar navigation">
         {links.map((link) => (
           <NavLink
-            aria-label="Sidebar navigation"
             key={link.to}
             to={link.to}
             className={({ isActive }) =>
