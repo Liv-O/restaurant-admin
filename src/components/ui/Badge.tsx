@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { ComponentProps } from 'react';
 
-type Tone = 'green' | 'amber' | 'blue' | 'red' | 'neutral';
+export type Tone = 'green' | 'amber' | 'blue' | 'red' | 'neutral';
 
 type BadgeProps = ComponentProps<'span'> & {
   tone?: Tone;
