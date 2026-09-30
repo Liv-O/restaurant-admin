@@ -8,12 +8,22 @@ import Table from '@/components/ui/Table';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 
-import { TAG_TONES } from '@/features/menu/constants';
+import { CATEGORIES, TAG_TONES } from '@/features/menu/constants';
+import type { Category } from '@/types';
+import FilterChip from '@/components/ui/FilterChip';
+
+type CategoryFilter = Category | 'All';
 
 export default function MenuPage() {
   const [dishes, setDishes] = useState(mockDishes);
+  const [selectedFilter, setSelectedFilter] = useState<CategoryFilter>('All');
+
+  const visibleDishes =
+    selectedFilter === 'All' ? dishes : dishes.filter((dish) => dish.category === selectedFilter);
+
   const unavailableDishesCount = dishes.filter((dish) => !dish.isAvailable).length;
   const totalDishesCount = dishes.length;
+  const filterOptions: CategoryFilter[] = ['All', ...CATEGORIES];
 
   return (
     <>
@@ -26,11 +36,24 @@ export default function MenuPage() {
           </Button>
         }
       />
+      <div className="mt-4 flex flex-wrap gap-2">
+        {filterOptions.map((opt) => {
+          return (
+            <FilterChip
+              key={opt}
+              isActive={opt === selectedFilter}
+              onClick={() => setSelectedFilter(opt)}
+            >
+              {opt}
+            </FilterChip>
+          );
+        })}
+      </div>
       <Card className="mt-6 overflow-hidden py-6">
         <Table columns={['Dish', 'Category', 'Price', 'Availability', '']}>
           <Table.Header />
           <Table.Body
-            data={dishes}
+            data={visibleDishes}
             render={(dish) => (
               <Table.Row className={`${dish.isAvailable ? '' : 'opacity-60'}`} key={dish.id}>
                 <Table.Cell>
