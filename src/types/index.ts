@@ -1,9 +1,15 @@
+import type { CATEGORIES, TAGS } from '../features/menu/constants';
+
+export type Category = (typeof CATEGORIES)[number];
+export type Tag = (typeof TAGS)[number];
+
 export type Dish = {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   price: number;
-  category: string;
+  category: Category;
+  tags: Tag[];
   isAvailable: boolean;
 };
 
