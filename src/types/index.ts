@@ -1,4 +1,5 @@
 import type { CATEGORIES, TAGS } from '../features/menu/constants';
+import type { RESERVATION_STATUSES } from '../features/reservations/constants';
 
 export type Category = (typeof CATEGORIES)[number];
 export type Tag = (typeof TAGS)[number];
@@ -38,14 +39,15 @@ export type Order = {
   createdAt: string;
 };
 
-export type ReservationStatus = 'pending' | 'confirmed' | 'cancelled';
+export type ReservationStatus = (typeof RESERVATION_STATUSES)[number];
 
 export type Reservation = {
   id: string;
-  tableId: string;
+  tableId?: string;
   guestName: string;
   phone: string;
   guests: number;
-  dateTime: string;
+  startsAt: string;
   status: ReservationStatus;
+  note?: string;
 };
