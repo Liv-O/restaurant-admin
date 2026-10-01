@@ -1,8 +1,7 @@
-import { RouterProvider } from 'react-router';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 //import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { Toaster } from 'react-hot-toast';
+// import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+// import { Toaster } from 'react-hot-toast';
 
 // import ProtectedRoute from '@/components/ProtectedRoute';
 import DashboardPage from '@/pages/dashboard/DashboardPage';
