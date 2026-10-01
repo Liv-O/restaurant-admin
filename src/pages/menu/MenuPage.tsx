@@ -11,6 +11,7 @@ import Badge from '@/components/ui/Badge';
 import { CATEGORIES, TAG_TONES } from '@/features/menu/constants';
 import type { Category } from '@/types';
 import FilterChip from '@/components/ui/FilterChip';
+import Switch from '@/components/ui/Switch';
 
 type CategoryFilter = Category | 'All';
 
@@ -24,6 +25,12 @@ export default function MenuPage() {
   const unavailableDishesCount = dishes.filter((dish) => !dish.isAvailable).length;
   const totalDishesCount = dishes.length;
   const filterOptions: CategoryFilter[] = ['All', ...CATEGORIES];
+
+  function toggleAvailability(id: string, isAvailable: boolean) {
+    setDishes((prevDishes) =>
+      prevDishes.map((dish) => (dish.id === id ? { ...dish, isAvailable } : dish)),
+    );
+  }
 
   return (
     <>
@@ -71,7 +78,15 @@ export default function MenuPage() {
                 </Table.Cell>
                 <Table.Cell>{dish.category}</Table.Cell>
                 <Table.Cell>${dish.price.toFixed(2)}</Table.Cell>
-                <Table.Cell>{dish.isAvailable ? 'Available' : 'Unavailable'}</Table.Cell>
+                <Table.Cell>
+                  <Switch
+                    className="mr-2"
+                    checked={dish.isAvailable}
+                    onChange={(e) => toggleAvailability(dish.id, e.target.checked)}
+                    aria-label={dish.name}
+                  />
+                  {/* {dish.isAvailable ? 'Available' : 'Unavailable'} */}
+                </Table.Cell>
                 <Table.Cell>
                   <Button variant="outline" size="icon" aria-label={`Edit ${dish.name}`}>
                     <Pencil />
