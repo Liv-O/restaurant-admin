@@ -13,7 +13,7 @@ const at = (dayOffset: number, hours: number, minutes = 0): string => {
 export const mockReservations: Reservation[] = [
   {
     id: 'res-1',
-    tableId: 'table-3',
+    tableId: '3',
     guestName: 'Olena Kovalenko',
     phone: '+380 67 123 4567',
     guests: 2,
@@ -31,7 +31,7 @@ export const mockReservations: Reservation[] = [
   },
   {
     id: 'res-3',
-    tableId: 'table-1',
+    tableId: '1',
     guestName: 'Iryna Shevchenko',
     phone: '+380 50 987 6543',
     guests: 2,
@@ -40,7 +40,7 @@ export const mockReservations: Reservation[] = [
   },
   {
     id: 'res-4',
-    tableId: 'table-5',
+    tableId: '5',
     guestName: 'Andrii Melnyk',
     phone: '+380 93 555 1122',
     guests: 6,
@@ -50,7 +50,7 @@ export const mockReservations: Reservation[] = [
   },
   {
     id: 'res-5',
-    tableId: 'table-2',
+    tableId: '2',
     guestName: 'Sofia Rossi',
     phone: '+39 333 123 4567',
     guests: 2,
@@ -68,7 +68,7 @@ export const mockReservations: Reservation[] = [
   },
   {
     id: 'res-7',
-    tableId: 'table-4',
+    tableId: '4',
     guestName: 'Emma Schneider',
     phone: '+49 151 2345 6789',
     guests: 4,
@@ -95,7 +95,7 @@ export const mockReservations: Reservation[] = [
   },
   {
     id: 'res-10',
-    tableId: 'table-6',
+    tableId: '6',
     guestName: 'Lucas Martin',
     phone: '+33 6 12 34 56 78',
     guests: 2,
