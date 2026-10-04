@@ -23,6 +23,10 @@
   --color-tone-gray: #efeae1;
   --color-tone-gray-ink: #4f4b45;
 
+  --color-input: #d6cfc2;
+  --color-danger: #a33a2e;
+  --color-danger-soft: #fdf6f5;
+
   --font-display: 'Fraunces', serif;
   --font-sans: 'Manrope', system-ui, sans-serif;
 }
