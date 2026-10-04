@@ -13,6 +13,9 @@ import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import { Users } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/Modal';
+import NewReservationForm from '@/features/reservations/NewReservationForm';
+import type { Reservation } from '@/types';
 
 type StatusFilter = (typeof RESERVATION_STATUSES)[number] | 'All';
 
@@ -22,6 +25,7 @@ export default function ReservationsPage() {
   const [chosenDate, setChosenDate] = useState(today);
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('All');
   const [reservations, setReservations] = useState(mockReservations);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const statusOptions: StatusFilter[] = ['All', ...RESERVATION_STATUSES];
 
@@ -58,12 +62,27 @@ export default function ReservationsPage() {
     );
   }
 
+  function handleOpenModal() {
+    setIsModalOpen(true);
+  }
+
+  function updateReservationsList(newReservation: Reservation) {
+    setReservations((prev) => [...prev, newReservation]);
+    setChosenDate(new Date(newReservation.startsAt));
+  }
+
   return (
     <>
       <PageHeader
         title="Reservations"
+        action={
+          <Button variant="primary" size="sm" onClick={handleOpenModal}>
+            <Users className="h-4 w-4" />
+            New Reservation
+          </Button>
+        }
         subtitle={`${chosenDateFormatted} · ${bookingsCount} ${bookingsCount === 1 ? 'booking' : 'bookings'} · ${guestsCount} guests expected`}
-      />
+      ></PageHeader>
 
       <div className="mt-6 grid grid-cols-7 gap-2.5">
         {dates.map((date) => {
@@ -148,6 +167,15 @@ export default function ReservationsPage() {
           />
         </Table>
       </Card>
+      {isModalOpen && (
+        <Modal onClose={() => setIsModalOpen(false)}>
+          <NewReservationForm
+            onClose={() => setIsModalOpen(false)}
+            chosenDate={chosenDate}
+            addReservation={updateReservationsList}
+          />
+        </Modal>
+      )}
     </>
   );
 }
