@@ -5,13 +5,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import FormField from '@/components/ui/FormField';
 import { format, isBefore, parse } from 'date-fns';
 import { tableNumbers, TIME_SLOTS } from './constants';
+import type { Reservation } from '@/types';
 
 const MIN_QTY = 1;
-const MAX_QTY = 10;
+const MAX_QTY = 20;
 
 type NewReservationFormProps = {
   onClose: () => void;
   chosenDate: Date;
+  addReservation: (newReservation: Reservation) => void;
 };
 
 const newReservationSchema = z
@@ -50,7 +52,11 @@ const newReservationSchema = z
 
 type NewReservationValues = z.infer<typeof newReservationSchema>;
 
-export default function NewReservationForm({ onClose, chosenDate }: NewReservationFormProps) {
+export default function NewReservationForm({
+  onClose,
+  chosenDate,
+  addReservation,
+}: NewReservationFormProps) {
   const defaultValues: NewReservationValues = {
     guestName: '',
     guestPhone: '',
@@ -72,7 +78,18 @@ export default function NewReservationForm({ onClose, chosenDate }: NewReservati
   } = useForm<NewReservationValues>({ defaultValues, resolver: zodResolver(newReservationSchema) });
 
   function onSubmit(data: NewReservationValues) {
-    console.log(data); // сюди потрапляють ТІЛЬКИ валідні дані
+    const newReservation: Reservation = {
+      id: crypto.randomUUID(),
+      tableId: data.tableNumber || undefined,
+      guestName: data.guestName,
+      phone: data.guestPhone,
+      guests: data.partySize,
+      startsAt: parse(`${data.date} ${data.time}`, 'yyyy-MM-dd HH:mm', new Date()).toISOString(),
+      status: data.status,
+      note: data.note || undefined,
+    };
+
+    addReservation(newReservation); // Викликаємо функцію оновлення резервацій
     reset(); // скидаємо форму після сабміту
     onClose(); // закриваємо модалку після сабміту
   }
@@ -143,7 +160,11 @@ export default function NewReservationForm({ onClose, chosenDate }: NewReservati
           <span id="partySize-label" className="text-[13px] font-bold">
             Party Size *
           </span>
-          <div className="flex h-11 items-center overflow-hidden rounded-[10px] border border-input">
+          <div
+            className="flex h-11 items-center overflow-hidden rounded-[10px] border border-input"
+            aria-labelledby="partySize-label"
+            role="group"
+          >
             <button
               type="button"
               aria-label="Fewer guests"
@@ -167,6 +188,11 @@ export default function NewReservationForm({ onClose, chosenDate }: NewReservati
               +
             </button>
           </div>
+          {errors.partySize?.message && (
+            <span id="partySize-error" className="text-xs font-semibold text-danger">
+              {errors.partySize?.message}
+            </span>
+          )}
         </div>
 
         <FormField
@@ -226,6 +252,8 @@ export default function NewReservationForm({ onClose, chosenDate }: NewReservati
           <textarea
             rows={3}
             {...register('note')}
+            aria-invalid={!!errors.note}
+            aria-describedby="note-error"
             className="resize-none rounded-[10px] border border-input px-3 py-2.5 text-[15px] font-medium focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/15 focus-visible:outline-none aria-invalid:border-danger aria-invalid:bg-danger-soft"
           />
         </FormField>

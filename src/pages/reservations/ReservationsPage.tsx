@@ -15,6 +15,7 @@ import { Users } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/Modal';
 import NewReservationForm from '@/features/reservations/NewReservationForm';
+import type { Reservation } from '@/types';
 
 type StatusFilter = (typeof RESERVATION_STATUSES)[number] | 'All';
 
@@ -63,6 +64,11 @@ export default function ReservationsPage() {
 
   function handleOpenModal() {
     setIsModalOpen(true);
+  }
+
+  function updateReservationsList(newReservation: Reservation) {
+    setReservations((prev) => [...prev, newReservation]);
+    setChosenDate(new Date(newReservation.startsAt));
   }
 
   return (
@@ -163,7 +169,11 @@ export default function ReservationsPage() {
       </Card>
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
-          <NewReservationForm onClose={() => setIsModalOpen(false)} chosenDate={chosenDate} />
+          <NewReservationForm
+            onClose={() => setIsModalOpen(false)}
+            chosenDate={chosenDate}
+            addReservation={updateReservationsList}
+          />
         </Modal>
       )}
     </>
