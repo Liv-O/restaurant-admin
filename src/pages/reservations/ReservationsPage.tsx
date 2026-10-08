@@ -11,17 +11,21 @@ import FilterChip from '@/components/ui/FilterChip';
 import Table from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
-import { Pencil, Users } from 'lucide-react';
+import { Ban, Pencil, Users } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/Modal';
 import NewReservationForm from '@/features/reservations/NewReservationForm';
 import type { Reservation } from '@/types';
 import toast from 'react-hot-toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 type StatusFilter = (typeof RESERVATION_STATUSES)[number] | 'All';
 
 type ReservationModal =
-  { mode: 'closed' } | { mode: 'create' } | { mode: 'edit'; reservation: Reservation };
+  | { mode: 'closed' }
+  | { mode: 'create' }
+  | { mode: 'edit'; reservation: Reservation }
+  | { mode: 'cancel'; reservation: Reservation };
 
 export default function ReservationsPage() {
   const today = new Date();
@@ -76,6 +80,17 @@ export default function ReservationsPage() {
     setModal({ mode: 'edit', reservation });
   }
 
+  function handleOpenModalCancel(reservation: Reservation) {
+    setModal({ mode: 'cancel', reservation });
+  }
+
+  function cancelReservation(reservation: Reservation) {
+    setReservations((prev) =>
+      prev.map((res) => (res.id === reservation.id ? { ...res, status: 'cancelled' } : res)),
+    );
+    setModal({ mode: 'closed' });
+  }
+
   function updateReservationsList(newReservation: Reservation) {
     if (reservations.find((res) => res.id === newReservation.id)) {
       setReservations((prev) =>
@@ -102,7 +117,6 @@ export default function ReservationsPage() {
         }
         subtitle={`${chosenDateFormatted} · ${bookingsCount} ${bookingsCount === 1 ? 'booking' : 'bookings'} · ${guestsCount} guests expected`}
       ></PageHeader>
-
       <div className="mt-6 grid grid-cols-7 gap-2.5">
         {dates.map((date) => {
           const bookingCount = filteredReservations('All', date).length;
@@ -198,6 +212,19 @@ export default function ReservationsPage() {
                           className="shrink-0 text-muted transition-colors group-hover:text-ink"
                         />
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="group shrink-0"
+                        aria-label={`Cancel reservation for ${reservation.guestName}`}
+                        onClick={() => handleOpenModalCancel(reservation)}
+                      >
+                        <Ban
+                          size={16}
+                          aria-hidden="true"
+                          className="shrink-0 text-muted transition-colors group-hover:text-ink"
+                        />
+                      </Button>
                     </div>
                   )}
                 </Table.Cell>
@@ -206,7 +233,7 @@ export default function ReservationsPage() {
           />
         </Table>
       </Card>
-      {modal.mode !== 'closed' && (
+      {modal.mode !== 'closed' && modal.mode !== 'cancel' && (
         <Modal
           onClose={() => setModal({ mode: 'closed' })}
           title={modal.mode === 'edit' ? 'Edit Reservation' : 'New Reservation'}
@@ -219,6 +246,17 @@ export default function ReservationsPage() {
 
             reservationData={modal.mode === 'edit' ? modal.reservation : undefined}
           />
+        </Modal>
+      )}
+      {modal.mode === 'cancel' && (
+        <Modal onClose={() => setModal({ mode: 'closed' })} title={'Cancel reservation?'}>
+          <ConfirmDialog
+            message={`Cancel reservation for ${modal.reservation.guestName} at ${format(modal.reservation.startsAt, 'HH:mm')}? This can't be undone.`}
+            confirmLabel="Cancel reservation"
+            cancelLabel="Keep reservation"
+            onConfirm={() => cancelReservation(modal.reservation)}
+            onCancel={() => setModal({ mode: 'closed' })}
+          ></ConfirmDialog>
         </Modal>
       )}
     </>
