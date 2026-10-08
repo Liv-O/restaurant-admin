@@ -168,7 +168,11 @@ export default function ReservationsPage() {
         </Table>
       </Card>
       {isModalOpen && (
-        <Modal onClose={() => setIsModalOpen(false)}>
+        <Modal
+          onClose={() => setIsModalOpen(false)}
+          title="New Reservation"
+          description="Fields marked with * are required"
+        >
           <NewReservationForm
             onClose={() => setIsModalOpen(false)}
             chosenDate={chosenDate}
