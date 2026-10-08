@@ -7,6 +7,8 @@ import { format, isBefore, parse } from 'date-fns';
 import { tableNumbers, TIME_SLOTS } from './constants';
 import type { Reservation } from '@/types';
 
+import toast from 'react-hot-toast';
+
 const MIN_QTY = 1;
 const MAX_QTY = 20;
 
@@ -89,7 +91,8 @@ export default function NewReservationForm({
       note: data.note || undefined,
     };
 
-    addReservation(newReservation); // Викликаємо функцію оновлення резервацій
+    addReservation(newReservation);
+
     reset(); // скидаємо форму після сабміту
     onClose(); // закриваємо модалку після сабміту
   }

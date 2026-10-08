@@ -16,6 +16,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/Modal';
 import NewReservationForm from '@/features/reservations/NewReservationForm';
 import type { Reservation } from '@/types';
+import toast from 'react-hot-toast';
 
 type StatusFilter = (typeof RESERVATION_STATUSES)[number] | 'All';
 
@@ -69,6 +70,7 @@ export default function ReservationsPage() {
   function updateReservationsList(newReservation: Reservation) {
     setReservations((prev) => [...prev, newReservation]);
     setChosenDate(new Date(newReservation.startsAt));
+    toast.success('New reservation created');
   }
 
   return (
@@ -126,7 +128,10 @@ export default function ReservationsPage() {
           <Table.Body
             data={tableReservations}
             render={(reservation) => (
-              <Table.Row key={reservation.id}>
+              <Table.Row
+                key={reservation.id}
+                className={reservation.status === 'cancelled' ? 'opacity-50' : ''}
+              >
                 <Table.Cell className="font-semibold tabular-nums">
                   {format(reservation.startsAt, 'HH:mm')}
                 </Table.Cell>
@@ -142,7 +147,7 @@ export default function ReservationsPage() {
                     <span> {reservation.guests} </span>
                   </div>
                 </Table.Cell>
-                <Table.Cell>{reservation.tableId ? reservation.tableId : '-'}</Table.Cell>
+                <Table.Cell>{reservation.tableId ? `T${reservation.tableId}` : '-'}</Table.Cell>
                 <Table.Cell className="max-w-56 truncate text-muted">
                   {reservation.note ? reservation.note : '-'}
                 </Table.Cell>
