@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useId, type ReactNode } from 'react';
 import Button from './ui/Button';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
@@ -6,9 +6,11 @@ import { X } from 'lucide-react';
 type ModalProps = {
   children: ReactNode;
   onClose: () => void;
+  title: string;
+  description?: string;
 };
 
-export default function Modal({ children, onClose }: ModalProps) {
+export default function Modal({ children, onClose, title, description }: ModalProps) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -30,20 +32,23 @@ export default function Modal({ children, onClose }: ModalProps) {
       onClose();
     }
   }
-
+  const titleId = useId();
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={handleClickOutside}
+      onMouseDown={handleClickOutside}
     >
       <div
         role="dialog"
+        aria-labelledby={titleId}
         aria-modal="true"
         className="relative w-full max-w-md rounded-2xl bg-surface p-6 shadow-xl"
       >
         <div className="mb-4 flex flex-col gap-1">
-          <h2 className="text-lg font-bold">New Reservation</h2>
-          <p className="text-sm text-muted">Fields marked with * are required</p>
+          <h2 className="text-lg font-bold" id={titleId}>
+            {title}
+          </h2>
+          {description && <p className="text-sm text-muted">{description}</p>}
         </div>
         <Button
           size="icon"

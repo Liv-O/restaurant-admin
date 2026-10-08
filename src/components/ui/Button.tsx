@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'outline';
-type Size = 'md' | 'lg' | 'sm' | 'icon';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'outline' | 'danger';
+type Size = 'md' | 'lg' | 'sm' | 'icon' | 'icon-sm';
 
 type ButtonProps = ComponentProps<'button'> & {
   variant?: Variant;
@@ -13,6 +13,7 @@ const variants: Record<Variant, string> = {
   secondary: 'border border-line bg-surface text-ink enabled:hover:bg-bg',
   ghost: 'bg-transparent text-ink enabled:hover:bg-bg',
   outline: 'border border-primary bg-white text-primary enabled:hover:bg-primary/10',
+  danger: 'bg-danger text-white enabled:hover:bg-danger/90',
 };
 
 const sizes: Record<Size, string> = {
@@ -20,6 +21,7 @@ const sizes: Record<Size, string> = {
   lg: 'h-13 px-6 text-base ',
   sm: 'h-9 px-3 text-sm',
   icon: 'size-11',
+  'icon-sm': 'size-9',
 };
 
 export default function Button({

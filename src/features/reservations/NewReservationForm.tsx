@@ -13,7 +13,8 @@ const MAX_QTY = 20;
 type NewReservationFormProps = {
   onClose: () => void;
   chosenDate: Date;
-  addReservation: (newReservation: Reservation) => void;
+  onSave: (newReservation: Reservation) => void;
+  reservationData?: Reservation;
 };
 
 const newReservationSchema = z
@@ -55,9 +56,10 @@ type NewReservationValues = z.infer<typeof newReservationSchema>;
 export default function NewReservationForm({
   onClose,
   chosenDate,
-  addReservation,
+  onSave,
+  reservationData,
 }: NewReservationFormProps) {
-  const defaultValues: NewReservationValues = {
+  let defaultValues: NewReservationValues = {
     guestName: '',
     guestPhone: '',
     date: format(chosenDate, 'yyyy-MM-dd'),
@@ -67,6 +69,18 @@ export default function NewReservationForm({
     status: 'pending',
     note: '',
   };
+  if (reservationData) {
+    defaultValues = {
+      guestName: reservationData.guestName,
+      guestPhone: reservationData.phone,
+      date: format(reservationData.startsAt, 'yyyy-MM-dd'),
+      time: format(reservationData.startsAt, 'HH:mm'),
+      partySize: reservationData.guests,
+      tableNumber: reservationData.tableId ?? '',
+      status: reservationData.status as 'pending' | 'confirmed',
+      note: reservationData.note ?? '',
+    };
+  }
 
   const {
     register, // підключити поле
@@ -79,7 +93,7 @@ export default function NewReservationForm({
 
   function onSubmit(data: NewReservationValues) {
     const newReservation: Reservation = {
-      id: crypto.randomUUID(),
+      id: reservationData?.id ? reservationData.id : crypto.randomUUID(),
       tableId: data.tableNumber || undefined,
       guestName: data.guestName,
       phone: data.guestPhone,
@@ -89,7 +103,8 @@ export default function NewReservationForm({
       note: data.note || undefined,
     };
 
-    addReservation(newReservation); // Викликаємо функцію оновлення резервацій
+    onSave(newReservation);
+
     reset(); // скидаємо форму після сабміту
     onClose(); // закриваємо модалку після сабміту
   }
@@ -263,7 +278,7 @@ export default function NewReservationForm({
           Cancel
         </Button>
         <Button type="submit" variant="primary" disabled={isSubmitting}>
-          Create Reservation
+          {reservationData ? `Save Changes` : `Create Reservation`}
         </Button>
       </div>
     </form>

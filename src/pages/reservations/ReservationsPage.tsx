@@ -11,13 +11,21 @@ import FilterChip from '@/components/ui/FilterChip';
 import Table from '@/components/ui/Table';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
-import { Users } from 'lucide-react';
+import { Ban, Pencil, Users } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/Modal';
 import NewReservationForm from '@/features/reservations/NewReservationForm';
 import type { Reservation } from '@/types';
+import toast from 'react-hot-toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 type StatusFilter = (typeof RESERVATION_STATUSES)[number] | 'All';
+
+type ReservationModal =
+  | { mode: 'closed' }
+  | { mode: 'create' }
+  | { mode: 'edit'; reservation: Reservation }
+  | { mode: 'cancel'; reservation: Reservation };
 
 export default function ReservationsPage() {
   const today = new Date();
@@ -25,7 +33,9 @@ export default function ReservationsPage() {
   const [chosenDate, setChosenDate] = useState(today);
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('All');
   const [reservations, setReservations] = useState(mockReservations);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [modal, setModal] = useState<ReservationModal>({ mode: 'closed' });
 
   const statusOptions: StatusFilter[] = ['All', ...RESERVATION_STATUSES];
 
@@ -62,12 +72,36 @@ export default function ReservationsPage() {
     );
   }
 
-  function handleOpenModal() {
-    setIsModalOpen(true);
+  function handleOpenModalNewRes() {
+    setModal({ mode: 'create' });
+  }
+
+  function handleOpenModalEdit(reservation: Reservation) {
+    setModal({ mode: 'edit', reservation });
+  }
+
+  function handleOpenModalCancel(reservation: Reservation) {
+    setModal({ mode: 'cancel', reservation });
+  }
+
+  function cancelReservation(reservation: Reservation) {
+    setReservations((prev) =>
+      prev.map((res) => (res.id === reservation.id ? { ...res, status: 'cancelled' } : res)),
+    );
+    setModal({ mode: 'closed' });
   }
 
   function updateReservationsList(newReservation: Reservation) {
-    setReservations((prev) => [...prev, newReservation]);
+    if (reservations.find((res) => res.id === newReservation.id)) {
+      setReservations((prev) =>
+        prev.map((res) => (res.id === newReservation.id ? newReservation : res)),
+      );
+      toast.success('Reservation edited');
+    } else {
+      setReservations((prev) => [...prev, newReservation]);
+      toast.success('New reservation created');
+    }
+
     setChosenDate(new Date(newReservation.startsAt));
   }
 
@@ -76,14 +110,13 @@ export default function ReservationsPage() {
       <PageHeader
         title="Reservations"
         action={
-          <Button variant="primary" size="sm" onClick={handleOpenModal}>
+          <Button variant="primary" size="sm" onClick={handleOpenModalNewRes}>
             <Users className="h-4 w-4" />
             New Reservation
           </Button>
         }
         subtitle={`${chosenDateFormatted} · ${bookingsCount} ${bookingsCount === 1 ? 'booking' : 'bookings'} · ${guestsCount} guests expected`}
       ></PageHeader>
-
       <div className="mt-6 grid grid-cols-7 gap-2.5">
         {dates.map((date) => {
           const bookingCount = filteredReservations('All', date).length;
@@ -126,7 +159,10 @@ export default function ReservationsPage() {
           <Table.Body
             data={tableReservations}
             render={(reservation) => (
-              <Table.Row key={reservation.id}>
+              <Table.Row
+                key={reservation.id}
+                className={reservation.status === 'cancelled' ? 'opacity-50' : ''}
+              >
                 <Table.Cell className="font-semibold tabular-nums">
                   {format(reservation.startsAt, 'HH:mm')}
                 </Table.Cell>
@@ -142,9 +178,9 @@ export default function ReservationsPage() {
                     <span> {reservation.guests} </span>
                   </div>
                 </Table.Cell>
-                <Table.Cell>{reservation.tableId ? reservation.tableId : '-'}</Table.Cell>
-                <Table.Cell className="max-w-56 truncate text-muted">
-                  {reservation.note ? reservation.note : '-'}
+                <Table.Cell>{reservation.tableId ? `T${reservation.tableId}` : '-'}</Table.Cell>
+                <Table.Cell className="text-muted">
+                  <p className="max-w-56 truncate">{reservation.note ? reservation.note : '-'}</p>
                 </Table.Cell>
                 <Table.Cell>
                   <Badge tone={RESERVATION_STATUS_TONES[reservation.status]} className="capitalize">
@@ -153,13 +189,43 @@ export default function ReservationsPage() {
                 </Table.Cell>
                 <Table.Cell className="text-right">
                   {(reservation.status === 'pending' || reservation.status === 'confirmed') && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSeatReservation(reservation.id)}
-                    >
-                      Seat
-                    </Button>
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0"
+                        onClick={() => handleSeatReservation(reservation.id)}
+                      >
+                        Seat
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="group shrink-0"
+                        aria-label={`Edit reservation for ${reservation.guestName}`}
+                        onClick={() => handleOpenModalEdit(reservation)}
+                      >
+                        <Pencil
+                          size={16}
+                          aria-hidden="true"
+                          className="shrink-0 text-muted transition-colors group-hover:text-ink"
+                        />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="group shrink-0"
+                        aria-label={`Cancel reservation for ${reservation.guestName}`}
+                        onClick={() => handleOpenModalCancel(reservation)}
+                      >
+                        <Ban
+                          size={16}
+                          aria-hidden="true"
+                          className="shrink-0 text-muted transition-colors group-hover:text-ink"
+                        />
+                      </Button>
+                    </div>
                   )}
                 </Table.Cell>
               </Table.Row>
@@ -167,13 +233,30 @@ export default function ReservationsPage() {
           />
         </Table>
       </Card>
-      {isModalOpen && (
-        <Modal onClose={() => setIsModalOpen(false)}>
+      {modal.mode !== 'closed' && modal.mode !== 'cancel' && (
+        <Modal
+          onClose={() => setModal({ mode: 'closed' })}
+          title={modal.mode === 'edit' ? 'Edit Reservation' : 'New Reservation'}
+          description="Fields marked with * are required"
+        >
           <NewReservationForm
-            onClose={() => setIsModalOpen(false)}
+            onClose={() => setModal({ mode: 'closed' })}
             chosenDate={chosenDate}
-            addReservation={updateReservationsList}
+            onSave={updateReservationsList}
+
+            reservationData={modal.mode === 'edit' ? modal.reservation : undefined}
           />
+        </Modal>
+      )}
+      {modal.mode === 'cancel' && (
+        <Modal onClose={() => setModal({ mode: 'closed' })} title={'Cancel reservation?'}>
+          <ConfirmDialog
+            message={`Cancel reservation for ${modal.reservation.guestName} at ${format(modal.reservation.startsAt, 'HH:mm')}? This can't be undone.`}
+            confirmLabel="Cancel reservation"
+            cancelLabel="Keep reservation"
+            onConfirm={() => cancelReservation(modal.reservation)}
+            onCancel={() => setModal({ mode: 'closed' })}
+          ></ConfirmDialog>
         </Modal>
       )}
     </>
