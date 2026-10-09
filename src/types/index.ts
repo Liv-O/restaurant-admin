@@ -1,8 +1,10 @@
 import type { CATEGORIES, TAGS } from '../features/menu/constants';
 import type { RESERVATION_STATUSES } from '../features/reservations/constants';
+import type { TABLE_STATUSES, ZONES } from '../features/floor/constants';
 
 export type Category = (typeof CATEGORIES)[number];
 export type Tag = (typeof TAGS)[number];
+export type Zone = (typeof ZONES)[number];
 
 export type Dish = {
   id: string;
@@ -14,13 +16,14 @@ export type Dish = {
   isAvailable: boolean;
 };
 
-export type TableStatus = 'free' | 'busy' | 'reserved' | 'bill';
+export type TableStatus = (typeof TABLE_STATUSES)[number];
 
 export type Table = {
   id: string;
   number: number;
   seats: number;
   status: TableStatus;
+  zone: Zone;
 };
 
 export type OrderStatus = 'new' | 'cooking' | 'ready' | 'served' | 'paid';
