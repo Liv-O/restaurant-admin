@@ -14,10 +14,15 @@ import { useState } from 'react';
 import type { Zone, TableStatus, Table } from '@/types';
 import Card from '@/components/ui/Card';
 import TableCard from '@/features/floor/TableCard';
+import { useNow } from '@/hooks/useNow';
+import { getTableDetails } from './utils';
+import { mockReservations } from '@/features/reservations/mockReservations';
 
 export default function FloorPage() {
   const [selectedZone, setSelectedZone] = useState<Zone>('main');
   const zoneTables: Table[] = mockTables.filter((table) => table.zone === selectedZone);
+
+  const now = useNow(60_000);
 
   const tableCount = zoneTables.reduce<Record<TableStatus, number>>(
     (acc, table) => {
@@ -32,7 +37,7 @@ export default function FloorPage() {
     },
   );
 
-  const today = format(new Date(), 'EEEE, dd MMMM');
+  const today = format(now, 'EEEE, dd MMMM');
 
   return (
     <>
@@ -94,6 +99,7 @@ export default function FloorPage() {
                 className={TABLE_STATUS_STYLES[table.status].className}
                 tableInfo={table}
                 tableStatus={TABLE_STATUS_STYLES[table.status].label}
+                details={getTableDetails(table, mockReservations, now)}
               ></TableCard>
             );
           })}

@@ -18,13 +18,20 @@ export type Dish = {
 
 export type TableStatus = (typeof TABLE_STATUSES)[number];
 
-export type Table = {
+export type TableBase = {
   id: string;
   number: number;
   seats: number;
   status: TableStatus;
   zone: Zone;
 };
+
+export type Table = TableBase &
+  (
+    | { status: 'free' }
+    | { status: 'reserved' }
+    | { status: 'occupied' | 'bill'; guests: number; seatedAt: string; waiter: string }
+  );
 
 export type OrderStatus = 'new' | 'cooking' | 'ready' | 'served' | 'paid';
 
