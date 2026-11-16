@@ -15,12 +15,14 @@ export default function TableCard({
   tableInfo,
   tableStatus,
   details,
+  onClick,
   ...props
 }: TableCardProps) {
   return (
     <button
       type="button"
-      className={`flex min-h-33 flex-col justify-between gap-1.5 border-2 p-4 text-left ${className} ${getTableShape(tableInfo.seats)}`}
+      className={`flex min-h-33 flex-col justify-between gap-1.5 border-2 p-4 text-left aria-pressed:outline-3 aria-pressed:outline-offset-3 aria-pressed:outline-tone-green-ink ${className} ${getTableShape(tableInfo.seats)}`}
+      onClick={onClick}
       {...props}
     >
       <div className="flex w-full items-baseline justify-between">
