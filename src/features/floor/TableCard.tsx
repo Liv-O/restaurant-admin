@@ -1,7 +1,7 @@
 import type { Table } from '@/types';
 import type { ComponentProps } from 'react';
 
-import { getTableShape } from '@/pages/floor/utils';
+import { getTableShape } from '@/features/floor/utils';
 
 type TableCardProps = ComponentProps<'button'> & {
   className: string;

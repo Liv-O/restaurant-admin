@@ -15,7 +15,7 @@ import type { Zone, TableStatus, Table } from '@/types';
 import Card from '@/components/ui/Card';
 import TableCard from '@/features/floor/TableCard';
 import { useNow } from '@/hooks/useNow';
-import { getTableDetails } from './utils';
+import { getTableDetails } from '../../features/floor/utils';
 import { mockReservations } from '@/features/reservations/mockReservations';
 
 export default function FloorPage() {
