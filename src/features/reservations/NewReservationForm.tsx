@@ -13,7 +13,8 @@ const MAX_QTY = 20;
 type NewReservationFormProps = {
   onClose: () => void;
   chosenDate: Date;
-  onSave: (newReservation: Reservation) => void;
+  onSave: (data: Omit<Reservation, 'id'>) => void;
+  isPending?: boolean;
   reservationData?: Reservation;
 };
 
@@ -58,6 +59,7 @@ export default function NewReservationForm({
   chosenDate,
   onSave,
   reservationData,
+  isPending = false,
 }: NewReservationFormProps) {
   let defaultValues: NewReservationValues = {
     guestName: '',
@@ -85,15 +87,14 @@ export default function NewReservationForm({
   const {
     register, // підключити поле
     handleSubmit, // обгортка для сабміту
-    formState: { errors, isSubmitting },
-    reset, // скинути форму
+    formState: { errors },
+
     control, // підглянути значення поля
     setValue, // змінити значення поля з коду
   } = useForm<NewReservationValues>({ defaultValues, resolver: zodResolver(newReservationSchema) });
 
   function onSubmit(data: NewReservationValues) {
-    const newReservation: Reservation = {
-      id: reservationData?.id ? reservationData.id : crypto.randomUUID(),
+    const newReservation: Omit<Reservation, 'id'> = {
       tableId: data.tableNumber || undefined,
       guestName: data.guestName,
       phone: data.guestPhone,
@@ -104,9 +105,6 @@ export default function NewReservationForm({
     };
 
     onSave(newReservation);
-
-    reset(); // скидаємо форму після сабміту
-    onClose(); // закриваємо модалку після сабміту
   }
 
   const quantity = useWatch({ control, name: 'partySize' }); // поточне число; компонент перерендериться, коли воно зміниться
@@ -274,11 +272,11 @@ export default function NewReservationForm({
         </FormField>
       </div>
       <div className="mt-2 flex justify-end gap-2.5 border-t border-line pt-4">
-        <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
+        <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
           Cancel
         </Button>
-        <Button type="submit" variant="primary" disabled={isSubmitting}>
-          {reservationData ? `Save Changes` : `Create Reservation`}
+        <Button type="submit" variant="primary" disabled={isPending}>
+          {isPending ? 'Saving...' : reservationData ? `Save Changes` : `Create Reservation`}
         </Button>
       </div>
     </form>

@@ -9,22 +9,26 @@ import {
   ZONE_LANDMARKS,
   LANDMARK_KIND_STYLES,
 } from '@/features/floor/constants';
-import { mockTables } from '@/features/floor/mockTables';
 import { useState } from 'react';
 import type { Zone, TableStatus, Table } from '@/types';
 import Card from '@/components/ui/Card';
 import TableCard from '@/features/floor/TableCard';
 import { useNow } from '@/hooks/useNow';
 import { getTableDetails, getUpcomingReservation } from '@/features/floor/utils';
-import { mockReservations } from '@/features/reservations/mockReservations';
 import TablePanel from '@/features/floor/TablePanel';
+import useTables from '@/features/floor/useTables';
+import useReservations from '@/features/reservations/useReservations';
 
 export default function FloorPage() {
   const [selectedZone, setSelectedZone] = useState<Zone>('main');
   const [selectedTableId, setSelectedTableId] = useState<string | undefined>(undefined);
 
-  const zoneTables: Table[] = mockTables.filter((table) => table.zone === selectedZone);
+  const { data: tables = [], isPending, error } = useTables();
+
+  const zoneTables: Table[] = tables.filter((table) => table.zone === selectedZone);
   const selectedTable = zoneTables.find((table) => table.id === selectedTableId);
+
+  const { data: reservations = [] } = useReservations();
 
   const now = useNow(60_000);
 
@@ -97,19 +101,25 @@ export default function FloorPage() {
           </div>
 
           <div className="grid grid-cols-4 gap-4">
-            {zoneTables.map((table) => {
-              return (
-                <TableCard
-                  key={table.id}
-                  className={`${TABLE_STATUS_STYLES[table.status].className}`}
-                  tableInfo={table}
-                  tableStatus={TABLE_STATUS_STYLES[table.status].label}
-                  details={getTableDetails(table, mockReservations, now)}
-                  onClick={() => setSelectedTableId(table.id)}
-                  aria-pressed={table.id === selectedTableId}
-                ></TableCard>
-              );
-            })}
+            {isPending ? (
+              <p className="py-10 text-center text-muted">Loading tables…</p>
+            ) : error ? (
+              <p className="py-10 text-center text-danger">Could not load tables.</p>
+            ) : (
+              zoneTables.map((table) => {
+                return (
+                  <TableCard
+                    key={table.id}
+                    className={`${TABLE_STATUS_STYLES[table.status].className}`}
+                    tableInfo={table}
+                    tableStatus={TABLE_STATUS_STYLES[table.status].label}
+                    details={getTableDetails(table, reservations, now)}
+                    onClick={() => setSelectedTableId(table.id)}
+                    aria-pressed={table.id === selectedTableId}
+                  ></TableCard>
+                );
+              })
+            )}
           </div>
         </Card>
       </div>
@@ -117,7 +127,7 @@ export default function FloorPage() {
         <TablePanel
           table={selectedTable}
           reservation={
-            selectedTableId ? getUpcomingReservation(selectedTableId, mockReservations) : undefined
+            selectedTableId ? getUpcomingReservation(selectedTableId, reservations) : undefined
           }
         />
       </aside>

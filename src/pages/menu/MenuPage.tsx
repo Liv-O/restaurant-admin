@@ -1,7 +1,6 @@
 import { Plus, Pencil } from 'lucide-react';
 import { useState } from 'react';
 
-import { mockDishes } from '@/features/menu/mockDishes';
 import PageHeader from '@/components/PageHeader';
 import Button from '@/components/ui/Button';
 import Table from '@/components/ui/Table';
@@ -12,11 +11,17 @@ import { CATEGORIES, TAG_TONES } from '@/features/menu/constants';
 import type { Category } from '@/types';
 import FilterChip from '@/components/ui/FilterChip';
 import Switch from '@/components/ui/Switch';
+import useDishes from '@/features/menu/useDishes';
+import useUpdateDish from '@/features/menu/useUpdateDish';
 
 type CategoryFilter = Category | 'All';
 
 export default function MenuPage() {
-  const [dishes, setDishes] = useState(mockDishes);
+  const { data: dishes = [], isPending: isDishesPending, error } = useDishes();
+  const { mutate: updateDish } = useUpdateDish();
+
+  // const [dishes, setDishes] = useState(mockDishes);
+
   const [selectedFilter, setSelectedFilter] = useState<CategoryFilter>('All');
 
   const visibleDishes =
@@ -27,9 +32,7 @@ export default function MenuPage() {
   const filterOptions: CategoryFilter[] = ['All', ...CATEGORIES];
 
   function toggleAvailability(id: string, isAvailable: boolean) {
-    setDishes((prevDishes) =>
-      prevDishes.map((dish) => (dish.id === id ? { ...dish, isAvailable } : dish)),
-    );
+    updateDish({ id, changes: { isAvailable } });
   }
 
   return (
@@ -57,45 +60,52 @@ export default function MenuPage() {
         })}
       </div>
       <Card className="mt-6 overflow-hidden py-6">
-        <Table columns={['Dish', 'Category', 'Price', 'Availability', '']}>
-          <Table.Header />
-          <Table.Body
-            data={visibleDishes}
-            render={(dish) => (
-              <Table.Row className={`${dish.isAvailable ? '' : 'opacity-60'}`} key={dish.id}>
-                <Table.Cell>
-                  <div className="flex flex-col gap-1">
-                    <p className="text-base font-bold">{dish.name}</p>
-                    <p>{dish.description}</p>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {dish.tags.map((tag) => (
-                        <Badge tone={TAG_TONES[tag]} key={tag}>
-                          {tag}
-                        </Badge>
-                      ))}
+        {isDishesPending && <p className="py-10 text-center text-muted">Loading dishes...</p>}
+        {error && <p className="py-10 text-center text-muted">Error loading dishes</p>}
+        {!isDishesPending && !error && visibleDishes.length === 0 && (
+          <p className="py-10 text-center text-muted">No dishes found.</p>
+        )}
+        {!isDishesPending && !error && visibleDishes.length > 0 && (
+          <Table columns={['Dish', 'Category', 'Price', 'Availability', '']}>
+            <Table.Header />
+            <Table.Body
+              data={visibleDishes}
+              render={(dish) => (
+                <Table.Row className={`${dish.isAvailable ? '' : 'opacity-60'}`} key={dish.id}>
+                  <Table.Cell>
+                    <div className="flex flex-col gap-1">
+                      <p className="text-base font-bold">{dish.name}</p>
+                      <p>{dish.description}</p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {dish.tags.map((tag) => (
+                          <Badge tone={TAG_TONES[tag]} key={tag}>
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </Table.Cell>
-                <Table.Cell>{dish.category}</Table.Cell>
-                <Table.Cell>${dish.price.toFixed(2)}</Table.Cell>
-                <Table.Cell>
-                  <Switch
-                    className="mr-2"
-                    checked={dish.isAvailable}
-                    onChange={(e) => toggleAvailability(dish.id, e.target.checked)}
-                    aria-label={dish.name}
-                  />
-                  {/* {dish.isAvailable ? 'Available' : 'Unavailable'} */}
-                </Table.Cell>
-                <Table.Cell>
-                  <Button variant="outline" size="icon" aria-label={`Edit ${dish.name}`}>
-                    <Pencil />
-                  </Button>
-                </Table.Cell>
-              </Table.Row>
-            )}
-          />
-        </Table>
+                  </Table.Cell>
+                  <Table.Cell>{dish.category}</Table.Cell>
+                  <Table.Cell>${dish.price.toFixed(2)}</Table.Cell>
+                  <Table.Cell>
+                    <Switch
+                      className="mr-2"
+                      checked={dish.isAvailable}
+                      onChange={(e) => toggleAvailability(dish.id, e.target.checked)}
+                      aria-label={dish.name}
+                    />
+                    {/* {dish.isAvailable ? 'Available' : 'Unavailable'} */}
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Button variant="outline" size="icon" aria-label={`Edit ${dish.name}`}>
+                      <Pencil />
+                    </Button>
+                  </Table.Cell>
+                </Table.Row>
+              )}
+            />
+          </Table>
+        )}
       </Card>
     </>
   );

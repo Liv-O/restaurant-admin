@@ -1,6 +1,14 @@
 import type { ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
-// Later: QueryClientProvider and other global providers
+const queryClient = new QueryClient();
+
 export default function Providers({ children }: { children: ReactNode }) {
-  return <>{children}</>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  );
 }
