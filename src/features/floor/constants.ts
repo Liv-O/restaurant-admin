@@ -5,6 +5,9 @@ export const ZONES = ['main', 'terrace'] as const;
 
 export const TABLE_STATUSES = ['free', 'occupied', 'reserved', 'bill'] as const;
 
+// Temporary list until real staff accounts exist.
+export const WAITERS = ['Anna', 'Max', 'Sofia'] as const;
+
 export const ZONES_LABELS: Record<Zone, string> = {
   main: 'Main Hall',
   terrace: 'Terrace',
