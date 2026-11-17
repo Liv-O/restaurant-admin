@@ -18,6 +18,9 @@ import { getTableDetails, getUpcomingReservation } from '@/features/floor/utils'
 import TablePanel from '@/features/floor/TablePanel';
 import useTables from '@/features/floor/useTables';
 import useReservations from '@/features/reservations/useReservations';
+import useCloseTable from '@/features/floor/useCloseTable';
+import useSeatTable from '@/features/floor/useSeatTable';
+import useSeatReservation from '@/features/floor/useSeatReservation';
 
 export default function FloorPage() {
   const [selectedZone, setSelectedZone] = useState<Zone>('main');
@@ -29,6 +32,9 @@ export default function FloorPage() {
   const selectedTable = zoneTables.find((table) => table.id === selectedTableId);
 
   const { data: reservations = [] } = useReservations();
+  const { mutate: closeTable, isPending: isClosingTable } = useCloseTable();
+  const { mutate: seatTable, isPending: isSeating } = useSeatTable();
+  const { mutate: seatReservation, isPending: isSeatingReservation } = useSeatReservation();
 
   const now = useNow(60_000);
 
@@ -127,8 +133,16 @@ export default function FloorPage() {
         <TablePanel
           table={selectedTable}
           reservation={
-            selectedTableId ? getUpcomingReservation(selectedTableId, reservations) : undefined
+            selectedTable ? getUpcomingReservation(selectedTable.id, reservations) : undefined
           }
+          actions={{
+            onCloseTable: closeTable,
+            isClosingTable,
+            onSeatWalkIn: seatTable,
+            isSeating,
+            onSeatReservation: seatReservation,
+            isSeatingReservation,
+          }}
         />
       </aside>
     </div>

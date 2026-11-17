@@ -3,22 +3,70 @@ import { Armchair, MousePointerClickIcon } from 'lucide-react';
 import { TABLE_STATUS_STYLES } from './constants';
 import Button from '@/components/ui/Button';
 import { format } from 'date-fns';
+import { useState, type FormEvent } from 'react';
+import { WAITERS } from './constants';
+import type { SeatTableData } from './useSeatTable';
+import type { SeatReservationData } from './useSeatReservation';
 
-type TablePanelProps = { table: Table | undefined; reservation: Reservation | undefined };
+type TableActions = {
+  onCloseTable: (id: string) => void;
+  isClosingTable: boolean;
+  onSeatWalkIn: (data: SeatTableData) => void;
+  isSeating: boolean;
+  onSeatReservation: (data: SeatReservationData) => void;
+  isSeatingReservation: boolean;
+};
 
-function renderStatusContent(table: Table, reservation: Reservation | undefined) {
+type TablePanelProps = {
+  table: Table | undefined;
+  reservation: Reservation | undefined;
+  actions: TableActions;
+};
+
+function renderStatusContent(
+  table: Table,
+  reservation: Reservation | undefined,
+  {
+    onCloseTable,
+    isClosingTable,
+    onSeatWalkIn,
+    isSeating,
+    onSeatReservation,
+    isSeatingReservation,
+  }: TableActions,
+) {
   switch (table.status) {
     case 'free':
-      return <FreeTableInfo table={table} />;
+      return (
+        <FreeTableInfo
+          key={table.id}
+          table={table}
+          onSeatWalkIn={onSeatWalkIn}
+          isSeating={isSeating}
+        />
+      );
     case 'occupied':
     case 'bill':
-      return <OccupiedTableInfo table={table} />;
+      return (
+        <OccupiedTableInfo
+          table={table}
+          onCloseTable={onCloseTable}
+          isClosingTable={isClosingTable}
+        />
+      );
     case 'reserved':
-      return <ReservedTableInfo reservation={reservation} />;
+      return (
+        <ReservedTableInfo
+          reservation={reservation}
+          key={table.id}
+          onSeatReservation={onSeatReservation}
+          isSeatingReservation={isSeatingReservation}
+        />
+      );
   }
 }
 
-export default function TablePanel({ table, reservation }: TablePanelProps) {
+export default function TablePanel({ table, reservation, actions }: TablePanelProps) {
   if (!table) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
@@ -44,15 +92,29 @@ export default function TablePanel({ table, reservation }: TablePanelProps) {
         </span>
       </div>
 
-      {renderStatusContent(table, reservation)}
+      {renderStatusContent(table, reservation, actions)}
     </div>
   );
 }
 
-function FreeTableInfo({ table }: { table: Table }) {
+type FreeTableInfoProps = {
+  table: Table;
+  onSeatWalkIn: (data: SeatTableData) => void;
+  isSeating: boolean;
+};
+
+function FreeTableInfo({ table, onSeatWalkIn, isSeating }: FreeTableInfoProps) {
+  const [guests, setGuests] = useState(Math.min(2, table.seats));
+  const [waiter, setWaiter] = useState<string>(WAITERS[0]);
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onSeatWalkIn({ id: table.id, guests, waiter });
+  }
+
   return (
-    <>
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
+    <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-5">
+      <div className="flex flex-col items-center gap-3 pt-4 text-center">
         <div className="flex size-14 items-center justify-center rounded-full bg-tone-green text-tone-green-ink">
           <Armchair className="size-6" aria-hidden="true" />
         </div>
@@ -60,16 +122,65 @@ function FreeTableInfo({ table }: { table: Table }) {
         <p className="text-sm text-muted">Up to {table.seats} guests</p>
       </div>
 
+      {/* Guests stepper */}
+      <div className="flex flex-col gap-1.5">
+        <span id="walkin-guests-label" className="text-[13px] font-bold">
+          Guests
+        </span>
+        <div
+          role="group"
+          aria-labelledby="walkin-guests-label"
+          className="flex h-11 items-center overflow-hidden rounded-[10px] border border-input"
+        >
+          <button
+            type="button"
+            aria-label="Fewer guests"
+            className="size-11 shrink-0 bg-bg font-bold disabled:cursor-not-allowed disabled:opacity-40"
+            onClick={() => setGuests((g) => g - 1)}
+            disabled={guests <= 1}
+          >
+            −
+          </button>
+          <span aria-live="polite" className="flex-1 text-center font-medium">
+            {guests} {guests === 1 ? 'guest' : 'guests'}
+          </span>
+          <button
+            type="button"
+            aria-label="More guests"
+            className="size-11 shrink-0 bg-bg font-bold disabled:cursor-not-allowed disabled:opacity-40"
+            onClick={() => setGuests((g) => g + 1)}
+            disabled={guests >= table.seats}
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      <WaiterSelect value={waiter} onChange={setWaiter} />
+
       <div className="mt-auto flex flex-col gap-2.5">
-        <Button size="lg" className="w-full">
-          Seat walk-in guests
+        <Button type="submit" size="lg" className="w-full" disabled={isSeating}>
+          {isSeating ? 'Seating…' : 'Seat walk-in guests'}
         </Button>
       </div>
-    </>
+    </form>
   );
 }
 
-function ReservedTableInfo({ reservation }: { reservation: Reservation | undefined }) {
+function ReservedTableInfo({
+  reservation,
+  onSeatReservation,
+  isSeatingReservation,
+}: {
+  reservation: Reservation | undefined;
+  onSeatReservation: (data: SeatReservationData) => void;
+  isSeatingReservation: boolean;
+}) {
+  const [waiter, setWaiter] = useState<string>(WAITERS[0]);
+  function handleSeat() {
+    if (!reservation) return;
+    onSeatReservation({ reservationId: reservation.id, waiter });
+  }
   return (
     <>
       {reservation ? (
@@ -86,9 +197,14 @@ function ReservedTableInfo({ reservation }: { reservation: Reservation | undefin
       ) : (
         <p className="text-sm text-muted">No reservation details</p>
       )}
-
+      <WaiterSelect value={waiter} onChange={setWaiter} />
       <div className="mt-auto flex flex-col gap-2.5">
-        <Button size="lg" className="w-full">
+        <Button
+          size="lg"
+          className="w-full"
+          disabled={!reservation || isSeatingReservation}
+          onClick={handleSeat}
+        >
           Guests arrived · Seat them
         </Button>
       </div>
@@ -105,11 +221,37 @@ function InfoTile({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-type OccupiedTableInfoProps = {
-  table: Extract<Table, { status: 'occupied' | 'bill' }>;
+type WaiterSelectProps = {
+  value: string;
+  onChange: (waiter: string) => void;
 };
 
-function OccupiedTableInfo({ table }: OccupiedTableInfoProps) {
+function WaiterSelect({ value, onChange }: WaiterSelectProps) {
+  return (
+    <label className="flex flex-col gap-1.5 text-[13px] font-bold">
+      Waiter
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-11 rounded-[10px] border border-input bg-surface px-3 text-[15px] font-medium focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/15 focus-visible:outline-none"
+      >
+        {WAITERS.map((name) => (
+          <option key={name} value={name}>
+            {name}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+type OccupiedTableInfoProps = {
+  table: Extract<Table, { status: 'occupied' | 'bill' }>;
+  onCloseTable: (id: string) => void;
+  isClosingTable: boolean;
+};
+
+function OccupiedTableInfo({ table, onCloseTable, isClosingTable }: OccupiedTableInfoProps) {
   return (
     <>
       <div className="grid grid-cols-3 gap-2">
@@ -120,8 +262,13 @@ function OccupiedTableInfo({ table }: OccupiedTableInfoProps) {
 
       {table.status === 'bill' && (
         <div className="mt-auto flex flex-col gap-2.5">
-          <Button size="lg" className="w-full">
-            Close table
+          <Button
+            size="lg"
+            className="w-full"
+            onClick={() => onCloseTable(table.id)}
+            disabled={isClosingTable}
+          >
+            {isClosingTable ? 'Closing...' : 'Close table'}
           </Button>
         </div>
       )}
