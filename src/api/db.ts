@@ -1,6 +1,5 @@
 import { mockTables } from '@/features/floor/mockTables';
 import { mockReservations } from '@/features/reservations/mockReservations';
-import { mockDishes } from '@/features/menu/mockDishes';
 
 // In-memory "database" for the fake API.
 // Deep copies, so the original mocks are never mutated.
@@ -8,5 +7,4 @@ import { mockDishes } from '@/features/menu/mockDishes';
 export const db = {
   tables: structuredClone(mockTables),
   reservations: structuredClone(mockReservations),
-  dishes: structuredClone(mockDishes),
 };

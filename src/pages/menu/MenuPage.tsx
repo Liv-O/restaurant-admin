@@ -7,32 +7,36 @@ import Table from '@/components/ui/Table';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 
-import { CATEGORIES, TAG_TONES } from '@/features/menu/constants';
-import type { Category } from '@/types';
+import { TAG_LABELS, TAG_TONES } from '@/features/menu/constants';
+import { formatPrice } from '@/lib/formatPrice';
 import FilterChip from '@/components/ui/FilterChip';
 import Switch from '@/components/ui/Switch';
 import useDishes from '@/features/menu/useDishes';
-import useUpdateDish from '@/features/menu/useUpdateDish';
+import useUpdateDishAvailability from '@/features/menu/useUpdateDishAvailability';
+import useCategories from '@/features/menu/useCategories';
+import type { Category } from '@/types';
+import useMe from '@/features/auth/useMe';
 
-type CategoryFilter = Category | 'All';
+type CategoryFilter = 'All' | Category['id'];
 
 export default function MenuPage() {
   const { data: dishes = [], isPending: isDishesPending, error } = useDishes();
-  const { mutate: updateDish } = useUpdateDish();
-
-  // const [dishes, setDishes] = useState(mockDishes);
+  const { mutate: updateDishAvailability } = useUpdateDishAvailability();
+  const { data: categories = [] } = useCategories();
+  const { data: me } = useMe();
 
   const [selectedFilter, setSelectedFilter] = useState<CategoryFilter>('All');
 
   const visibleDishes =
-    selectedFilter === 'All' ? dishes : dishes.filter((dish) => dish.category === selectedFilter);
+    selectedFilter === 'All'
+      ? dishes
+      : dishes.filter((dish) => dish.category.id === selectedFilter);
 
   const unavailableDishesCount = dishes.filter((dish) => !dish.isAvailable).length;
   const totalDishesCount = dishes.length;
-  const filterOptions: CategoryFilter[] = ['All', ...CATEGORIES];
 
   function toggleAvailability(id: string, isAvailable: boolean) {
-    updateDish({ id, changes: { isAvailable } });
+    updateDishAvailability({ id, isAvailable });
   }
 
   return (
@@ -41,23 +45,25 @@ export default function MenuPage() {
         title="Menu"
         subtitle={`${totalDishesCount} dishes · ${unavailableDishesCount} unavailable today`}
         action={
-          <Button>
+          <Button disabled={me?.role !== 'admin'}>
             <Plus size={18} /> Add dish
           </Button>
         }
       />
       <div className="mt-4 flex flex-wrap gap-2">
-        {filterOptions.map((opt) => {
-          return (
-            <FilterChip
-              key={opt}
-              isActive={opt === selectedFilter}
-              onClick={() => setSelectedFilter(opt)}
-            >
-              {opt}
-            </FilterChip>
-          );
-        })}
+        <FilterChip isActive={selectedFilter === 'All'} onClick={() => setSelectedFilter('All')}>
+          All
+        </FilterChip>
+
+        {categories.map((category) => (
+          <FilterChip
+            key={category.id}
+            isActive={selectedFilter === category.id}
+            onClick={() => setSelectedFilter(category.id)}
+          >
+            {category.name}
+          </FilterChip>
+        ))}
       </div>
       <Card className="mt-6 overflow-hidden py-6">
         {isDishesPending && <p className="py-10 text-center text-muted">Loading dishes...</p>}
@@ -79,25 +85,31 @@ export default function MenuPage() {
                       <div className="mt-1 flex flex-wrap gap-1">
                         {dish.tags.map((tag) => (
                           <Badge tone={TAG_TONES[tag]} key={tag}>
-                            {tag}
+                            {TAG_LABELS[tag]}
                           </Badge>
                         ))}
                       </div>
                     </div>
                   </Table.Cell>
-                  <Table.Cell>{dish.category}</Table.Cell>
-                  <Table.Cell>${dish.price.toFixed(2)}</Table.Cell>
+                  <Table.Cell>{dish.category.name}</Table.Cell>
+                  <Table.Cell>{formatPrice(dish.price)}</Table.Cell>
                   <Table.Cell>
                     <Switch
                       className="mr-2"
                       checked={dish.isAvailable}
+                      disabled={me?.role !== 'admin' && me?.role !== 'kitchen'}
                       onChange={(e) => toggleAvailability(dish.id, e.target.checked)}
                       aria-label={dish.name}
                     />
                     {/* {dish.isAvailable ? 'Available' : 'Unavailable'} */}
                   </Table.Cell>
                   <Table.Cell>
-                    <Button variant="outline" size="icon" aria-label={`Edit ${dish.name}`}>
+                    <Button
+                      disabled={me?.role !== 'admin'}
+                      variant="outline"
+                      size="icon"
+                      aria-label={`Edit ${dish.name}`}
+                    >
                       <Pencil />
                     </Button>
                   </Table.Cell>

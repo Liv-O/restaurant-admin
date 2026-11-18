@@ -1,19 +1,19 @@
-import { updateDish } from '@/api/dishes';
+import { updateDishAvailability } from '@/api/dishes';
 import type { Dish } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
-export default function useUpdateDish() {
+export default function useUpdateDishAvailability() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, changes }: { id: string; changes: Partial<Dish> }) =>
-      updateDish(id, changes),
-    onMutate: async ({ id, changes }) => {
+    mutationFn: ({ id, isAvailable }: { id: string; isAvailable: boolean }) =>
+      updateDishAvailability(id, isAvailable),
+    onMutate: async ({ id, isAvailable }) => {
       await queryClient.cancelQueries({ queryKey: ['dishes'] });
       const previous = queryClient.getQueryData<Dish[]>(['dishes']);
       queryClient.setQueryData<Dish[]>(['dishes'], (old = []) =>
-        old.map((d) => (d.id === id ? { ...d, ...changes } : d)),
+        old.map((d) => (d.id === id ? { ...d, isAvailable } : d)),
       );
       return { previous };
     },
