@@ -1,6 +1,7 @@
 import type { CATEGORIES, TAGS } from '../features/menu/constants';
 import type { RESERVATION_STATUSES } from '../features/reservations/constants';
 import type { TABLE_STATUSES, ZONES } from '../features/floor/constants';
+import type { ROLES } from '@/features/auth/constants';
 
 export type Category = (typeof CATEGORIES)[number];
 export type Tag = (typeof TAGS)[number];
@@ -60,4 +61,13 @@ export type Reservation = {
   startsAt: string;
   status: ReservationStatus;
   note?: string;
+};
+
+export type Role = (typeof ROLES)[number];
+
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
 };

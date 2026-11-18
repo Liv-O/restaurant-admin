@@ -1,9 +1,6 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
-//import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-// import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { BrowserRouter, Route, Routes } from 'react-router';
 import { Toaster } from 'react-hot-toast';
 
-// import ProtectedRoute from '@/components/ProtectedRoute';
 import DashboardPage from '@/pages/dashboard/DashboardPage';
 import FloorPage from '@/pages/floor/FloorPage';
 import KitchenPage from '@/pages/kitchen/KitchenPage';
@@ -13,6 +10,7 @@ import LoginPage from '@/pages/login/LoginPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import AppLayout from './layouts/AppLayout';
 import Providers from './app/providers';
+import ProtectedRoute, { HomeRedirect } from './components/ProtectedRoute';
 
 export default function App() {
   return (
@@ -41,16 +39,23 @@ export default function App() {
           }}
         />
         <Routes>
-          <Route element={<AppLayout />}>
-            <Route index element={<Navigate replace to="dashboard" />} />
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="floor" element={<FloorPage />} />
-            <Route path="kitchen" element={<KitchenPage />} />
-            <Route path="menu" element={<MenuPage />} />
-            <Route path="reservations" element={<ReservationsPage />} />
-          </Route>
-
           <Route path="/login" element={<LoginPage />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppLayout />}>
+              <Route index element={<HomeRedirect />} />
+              <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                <Route path="dashboard" element={<DashboardPage />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={['admin', 'waiter']} />}>
+                <Route path="floor" element={<FloorPage />} />
+                <Route path="reservations" element={<ReservationsPage />} />
+              </Route>
+
+              <Route path="kitchen" element={<KitchenPage />} />
+              <Route path="menu" element={<MenuPage />} />
+            </Route>
+          </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
