@@ -1,9 +1,20 @@
-import type { CATEGORIES, TAGS } from '../features/menu/constants';
+import type { TAGS } from '../features/menu/constants';
 import type { RESERVATION_STATUSES } from '../features/reservations/constants';
 import type { TABLE_STATUSES, ZONES } from '../features/floor/constants';
 import type { ROLES } from '@/features/auth/constants';
 
-export type Category = (typeof CATEGORIES)[number];
+// Every list endpoint wraps its items the same way: { data: [...], meta: { total } }.
+export type ListResponse<T> = {
+  data: T[];
+  meta: { total: number };
+};
+
+export type Category = {
+  id: string;
+  name: string;
+  sortOrder: number;
+};
+
 export type Tag = (typeof TAGS)[number];
 export type Zone = (typeof ZONES)[number];
 
@@ -11,10 +22,11 @@ export type Dish = {
   id: string;
   name: string;
   description: string;
-  price: number;
-  category: Category;
+  price: number; // in cents: 1450 = $14.50
+  category: Pick<Category, 'id' | 'name'>;
   tags: Tag[];
   isAvailable: boolean;
+  imageUrl: string | null;
 };
 
 export type TableStatus = (typeof TABLE_STATUSES)[number];
