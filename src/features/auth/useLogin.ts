@@ -10,7 +10,7 @@ export default function useLogin() {
     mutationFn: (credentials: { email: string; password: string }) => login(credentials),
     onSuccess: (user) => {
       queryClient.setQueryData(['me'], user);
-      navigate('/dashboard', { replace: true });
+      navigate('/', { replace: true });
     },
   });
 }
