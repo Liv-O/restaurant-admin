@@ -26,11 +26,8 @@ export async function updateReservation(
   id: string,
   changes: Partial<Omit<Reservation, 'id'>>,
 ): Promise<Reservation> {
-  await delay(400);
-  const reservation = db.reservations.find((r) => r.id === id);
-  if (!reservation) throw new Error('Reservation not found');
-  Object.assign(reservation, changes);
-  return structuredClone(reservation);
+  const response = await api.patch<Reservation>(`/reservations/${id}`, changes);
+  return response.data;
 }
 
 export async function seatReservation(

@@ -17,8 +17,8 @@ export default function useUpdateReservation() {
       queryClient.invalidateQueries({ queryKey: ['reservations'] });
       toast.success('Reservation updated successfully');
     },
-    onError: () => {
-      toast.error('Error updating reservation');
+    onError: (error) => {
+      toast.error(`Error updating reservation: ${error.message}`);
     },
   });
 }
