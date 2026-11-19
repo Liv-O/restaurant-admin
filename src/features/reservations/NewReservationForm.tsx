@@ -95,13 +95,13 @@ export default function NewReservationForm({
 
   function onSubmit(data: NewReservationValues) {
     const newReservation: Omit<Reservation, 'id'> = {
-      tableId: data.tableNumber || undefined,
+      tableId: data.tableNumber || null,
       guestName: data.guestName,
       phone: data.guestPhone,
       guests: data.partySize,
       startsAt: parse(`${data.date} ${data.time}`, 'yyyy-MM-dd HH:mm', new Date()).toISOString(),
       status: data.status,
-      note: data.note || undefined,
+      note: data.note || null,
     };
 
     onSave(newReservation);
@@ -112,7 +112,7 @@ export default function NewReservationForm({
   function changeQuantity(delta: number) {
     setValue('partySize', quantity + delta, { shouldValidate: true });
   }
-
+  // TODO (day 3): tableId is not sent yet — load real tables from GET /tables
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-3.5">
@@ -227,34 +227,35 @@ export default function NewReservationForm({
             ))}
           </select>
         </FormField>
-
-        <fieldset className="col-span-2 flex flex-col gap-1.5">
-          <legend className="mb-1.5 text-[13px] font-bold">Status</legend>
-          <div className="grid grid-cols-2 gap-1 rounded-xl bg-tone-gray p-1">
-            <label>
-              <input
-                type="radio"
-                value="pending"
-                className="peer sr-only"
-                {...register('status')}
-              />
-              <span className="flex h-9.5 items-center justify-center rounded-[9px] text-sm font-semibold text-muted peer-checked:bg-surface peer-checked:text-ink peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-primary">
-                Pending
-              </span>
-            </label>
-            <label>
-              <input
-                type="radio"
-                value="confirmed"
-                className="peer sr-only"
-                {...register('status')}
-              />
-              <span className="flex h-9.5 items-center justify-center rounded-[9px] text-sm font-semibold text-muted peer-checked:bg-surface peer-checked:text-ink peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-primary">
-                Confirmed
-              </span>
-            </label>
-          </div>
-        </fieldset>
+        {reservationData && (
+          <fieldset className="col-span-2 flex flex-col gap-1.5">
+            <legend className="mb-1.5 text-[13px] font-bold">Status</legend>
+            <div className="grid grid-cols-2 gap-1 rounded-xl bg-tone-gray p-1">
+              <label>
+                <input
+                  type="radio"
+                  value="pending"
+                  className="peer sr-only"
+                  {...register('status')}
+                />
+                <span className="flex h-9.5 items-center justify-center rounded-[9px] text-sm font-semibold text-muted peer-checked:bg-surface peer-checked:text-ink peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-primary">
+                  Pending
+                </span>
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  value="confirmed"
+                  className="peer sr-only"
+                  {...register('status')}
+                />
+                <span className="flex h-9.5 items-center justify-center rounded-[9px] text-sm font-semibold text-muted peer-checked:bg-surface peer-checked:text-ink peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-primary">
+                  Confirmed
+                </span>
+              </label>
+            </div>
+          </fieldset>
+        )}
 
         <FormField
           label="Note"
