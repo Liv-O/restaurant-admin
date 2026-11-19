@@ -66,13 +66,13 @@ export type ReservationStatus = (typeof RESERVATION_STATUSES)[number];
 
 export type Reservation = {
   id: string;
-  tableId?: string;
+  tableId: string | null;
   guestName: string;
   phone: string;
   guests: number;
   startsAt: string;
   status: ReservationStatus;
-  note?: string;
+  note: string | null;
 };
 
 export type Role = (typeof ROLES)[number];

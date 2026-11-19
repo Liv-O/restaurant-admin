@@ -69,7 +69,7 @@ export default function LoginForm() {
         </div>
       )}
       <Button type="submit" size="lg" className="mt-1 w-full" disabled={isLoginPending}>
-        {isLoginPending ? 'Sign in...' : 'Sign in'}
+        {isLoginPending ? 'Signing in…' : 'Sign in'}
       </Button>
       <div className="mt-2 flex items-center gap-3 text-[13px] font-semibold text-muted">
         <span className="h-px flex-1 bg-line" />

@@ -1,30 +1,33 @@
-import type { Reservation } from '@/types';
+import type { ListResponse, Reservation } from '@/types';
 import { db } from './db';
 import { delay } from './delay';
+import { api } from './client';
 
 export async function getReservations(): Promise<Reservation[]> {
-  await delay(400);
-  return structuredClone(db.reservations);
+  const response = await api.get<ListResponse<Reservation>>('/reservations');
+  return response.data.data;
 }
 
 export async function createReservation(
   reservation: Omit<Reservation, 'id'>,
 ): Promise<Reservation> {
-  await delay(400);
-  const newReservation: Reservation = { ...reservation, id: crypto.randomUUID() };
-  db.reservations.push(newReservation);
-  return structuredClone(newReservation);
+  const body = {
+    guestName: reservation.guestName,
+    phone: reservation.phone,
+    guests: reservation.guests,
+    startsAt: reservation.startsAt,
+    ...(reservation.note && { note: reservation.note }),
+  };
+  const response = await api.post<Reservation>('/reservations', body);
+  return response.data;
 }
 
 export async function updateReservation(
   id: string,
   changes: Partial<Omit<Reservation, 'id'>>,
 ): Promise<Reservation> {
-  await delay(400);
-  const reservation = db.reservations.find((r) => r.id === id);
-  if (!reservation) throw new Error('Reservation not found');
-  Object.assign(reservation, changes);
-  return structuredClone(reservation);
+  const response = await api.patch<Reservation>(`/reservations/${id}`, changes);
+  return response.data;
 }
 
 export async function seatReservation(

@@ -3,6 +3,7 @@ import logoUrl from '@/assets/favicon-bell.svg';
 import LoginForm from '@/features/auth/LoginForm';
 import { Navigate } from 'react-router';
 import useMe from '@/features/auth/useMe';
+import FullPageSpinner from '@/components/ui/FullPageSpinner';
 
 const FEATURES = [
   { icon: LayoutGrid, text: 'Live floor plan and table orders' },
@@ -13,7 +14,7 @@ const FEATURES = [
 export default function LoginPage() {
   const { data: user, isPending } = useMe();
 
-  if (isPending) return null;
+  if (isPending) return <FullPageSpinner />;
   if (user) return <Navigate to="/dashboard" replace />;
 
   return (

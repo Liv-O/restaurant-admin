@@ -77,6 +77,10 @@ export default function ReservationsPage() {
     updateReservation({ id: reservationId, reservationData: { status: 'seated' } });
   }
 
+  function handleConfirmReservation(reservationId: string) {
+    updateReservation({ id: reservationId, reservationData: { status: 'confirmed' } });
+  }
+
   function handleOpenModalNewRes() {
     setModal({ mode: 'create' });
   }
@@ -102,8 +106,15 @@ export default function ReservationsPage() {
 
   function updateReservationsList(data: Omit<Reservation, 'id'>) {
     if (modal.mode === 'edit') {
+      const { tableId, status, ...rest } = data;
       updateReservation(
-        { id: modal.reservation.id, reservationData: data },
+        {
+          id: modal.reservation.id,
+          reservationData: {
+            ...(status !== modal.reservation.status && { status: status }),
+            ...rest,
+          },
+        },
         {
           onSuccess: () => {
             setModal({ mode: 'closed' });
@@ -216,14 +227,25 @@ export default function ReservationsPage() {
                   <Table.Cell className="text-right">
                     {(reservation.status === 'pending' || reservation.status === 'confirmed') && (
                       <div className="flex justify-end gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="shrink-0"
-                          onClick={() => handleSeatReservation(reservation.id)}
-                        >
-                          Seat
-                        </Button>
+                        {reservation.status === 'confirmed' ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0"
+                            onClick={() => handleSeatReservation(reservation.id)}
+                          >
+                            Seat
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0"
+                            onClick={() => handleConfirmReservation(reservation.id)}
+                          >
+                            Confirm
+                          </Button>
+                        )}
 
                         <Button
                           variant="ghost"

@@ -11,8 +11,8 @@ export default function useCreateReservation() {
       queryClient.invalidateQueries({ queryKey: ['reservations'] });
       toast.success('Reservation created successfully');
     },
-    onError: () => {
-      toast.error('Error creating reservation');
+    onError: (error) => {
+      toast.error(`Error creating reservation: ${error.message}`);
     },
   });
 }
