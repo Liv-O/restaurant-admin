@@ -1,4 +1,5 @@
 import { Link, NavLink } from 'react-router';
+import type { ReactNode } from 'react';
 
 import { LuLayoutDashboard } from 'react-icons/lu';
 import { CiBoxes } from 'react-icons/ci';
@@ -9,9 +10,17 @@ import logoUrl from '@/assets/favicon-bell.svg';
 import useMe from '@/features/auth/useMe';
 import { LogOut } from 'lucide-react';
 import useLogout from '@/features/auth/useLogout';
+import type { Role } from '@/types';
 
-const links = [
-  { to: '/', label: 'Dashboard', icon: <LuLayoutDashboard />, roles: ['admin'] },
+type SidebarLink = {
+  to: string;
+  label: string;
+  icon: ReactNode;
+  roles: Role[];
+};
+
+const links: SidebarLink[] = [
+  { to: '/dashboard', label: 'Dashboard', icon: <LuLayoutDashboard />, roles: ['admin'] },
   { to: '/floor', label: 'Floor', icon: <CiBoxes />, roles: ['admin', 'waiter'] },
   {
     to: '/kitchen',
