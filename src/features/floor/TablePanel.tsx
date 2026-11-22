@@ -153,14 +153,15 @@ function FreeTableInfo({ table, onSeatWalkIn }: FreeTableInfoProps) {
           >
             +
           </button>
-          <Button
-            onClick={() => {
-              setIsOpenMenu(true);
-            }}
-          >
-            Add Items
-          </Button>
         </div>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setIsOpenMenu(true);
+          }}
+        >
+          Add Items
+        </Button>
       </div>
 
       {/* <WaiterSelect value={waiter} onChange={setWaiter} /> */}
@@ -169,7 +170,7 @@ function FreeTableInfo({ table, onSeatWalkIn }: FreeTableInfoProps) {
           onClose={() => {
             setIsOpenMenu(false);
           }}
-          title="Menu"
+          title={`Add items · Table ${table.number}`}
         >
           Menu will be here
         </Modal>
