@@ -7,6 +7,7 @@ import { useState, type FormEvent } from 'react';
 import { WAITERS } from './constants';
 import type { SeatTableData } from './useSeatTable';
 import type { SeatReservationData } from './useSeatReservation';
+import Modal from '@/components/Modal';
 
 type TableActions = {
   onCloseTable: (id: string) => void;
@@ -30,7 +31,7 @@ function renderStatusContent(
     onCloseTable,
     isClosingTable,
     onSeatWalkIn,
-    isSeating,
+    // isSeating,
     onSeatReservation,
     isSeatingReservation,
   }: TableActions,
@@ -42,7 +43,7 @@ function renderStatusContent(
           key={table.id}
           table={table}
           onSeatWalkIn={onSeatWalkIn}
-          isSeating={isSeating}
+          // isSeating={isSeating}
         />
       );
     case 'occupied':
@@ -100,12 +101,13 @@ export default function TablePanel({ table, reservation, actions }: TablePanelPr
 type FreeTableInfoProps = {
   table: Table;
   onSeatWalkIn: (data: SeatTableData) => void;
-  isSeating: boolean;
+  // isSeating: boolean;
 };
 
-function FreeTableInfo({ table, onSeatWalkIn, isSeating }: FreeTableInfoProps) {
+function FreeTableInfo({ table, onSeatWalkIn }: FreeTableInfoProps) {
   const [guests, setGuests] = useState(Math.min(2, table.seats));
-  const [waiter, setWaiter] = useState<string>(WAITERS[0]);
+  const [waiter, _setWaiter] = useState<string>(WAITERS[0]);
+  const [isOpenMenu, setIsOpenMenu] = useState<boolean>(false);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -153,14 +155,31 @@ function FreeTableInfo({ table, onSeatWalkIn, isSeating }: FreeTableInfoProps) {
           >
             +
           </button>
+          <Button
+            onClick={() => {
+              setIsOpenMenu(true);
+            }}
+          >
+            Add Items
+          </Button>
         </div>
       </div>
 
-      <WaiterSelect value={waiter} onChange={setWaiter} />
+      {/* <WaiterSelect value={waiter} onChange={setWaiter} /> */}
+      {isOpenMenu && (
+        <Modal
+          onClose={() => {
+            setIsOpenMenu(false);
+          }}
+          title="Menu"
+        >
+          Menu will be here
+        </Modal>
+      )}
 
       <div className="mt-auto flex flex-col gap-2.5">
-        <Button type="submit" size="lg" className="w-full" disabled={isSeating}>
-          {isSeating ? 'Seating…' : 'Seat walk-in guests'}
+        <Button type="submit" size="lg" className="w-full" disabled={true}>
+          {'Send to kitchen'}
         </Button>
       </div>
     </form>
