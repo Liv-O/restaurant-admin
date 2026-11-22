@@ -16,6 +16,9 @@ import useUpdateDishAvailability from '@/features/menu/useUpdateDishAvailability
 import useCategories from '@/features/menu/useCategories';
 import type { Category } from '@/types';
 import useMe from '@/features/auth/useMe';
+// TEMP: Redux draft check
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { addItem, selectDraft, selectDraftCount } from '@/store/orderDraftsSlice';
 
 type CategoryFilter = 'All' | Category['id'];
 
@@ -24,6 +27,11 @@ export default function MenuPage() {
   const { mutate: updateDishAvailability } = useUpdateDishAvailability();
   const { data: categories = [] } = useCategories();
   const { data: me } = useMe();
+
+  // TEMP: Redux draft check for table 'test'
+  const dispatch = useAppDispatch();
+  const draft = useAppSelector((state) => selectDraft(state, 'test'));
+  const draftCount = useAppSelector((state) => selectDraftCount(state, 'test'));
 
   const [selectedFilter, setSelectedFilter] = useState<CategoryFilter>('All');
 
@@ -65,7 +73,11 @@ export default function MenuPage() {
           </FilterChip>
         ))}
       </div>
-      <Card className="mt-6 overflow-hidden py-6">
+      {/* TEMP: Redux draft check */}
+      <p className="mt-6 text-sm font-semibold text-muted">
+        Draft: {draftCount} items ({draft.length} dishes)
+      </p>
+      <Card className="mt-2 overflow-hidden py-6">
         {isDishesPending && <p className="py-10 text-center text-muted">Loading dishes...</p>}
         {error && <p className="py-10 text-center text-muted">Error loading dishes</p>}
         {!isDishesPending && !error && visibleDishes.length === 0 && (
@@ -104,14 +116,24 @@ export default function MenuPage() {
                     {/* {dish.isAvailable ? 'Available' : 'Unavailable'} */}
                   </Table.Cell>
                   <Table.Cell>
-                    <Button
-                      disabled={me?.role !== 'admin'}
-                      variant="outline"
-                      size="icon"
-                      aria-label={`Edit ${dish.name}`}
-                    >
-                      <Pencil />
-                    </Button>
+                    <div className="flex gap-2">
+                      {/* TEMP: Redux draft check */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => dispatch(addItem({ tableId: 'test', dishId: dish.id }))}
+                      >
+                        + Draft
+                      </Button>
+                      <Button
+                        disabled={me?.role !== 'admin'}
+                        variant="outline"
+                        size="icon"
+                        aria-label={`Edit ${dish.name}`}
+                      >
+                        <Pencil />
+                      </Button>
+                    </div>
                   </Table.Cell>
                 </Table.Row>
               )}
