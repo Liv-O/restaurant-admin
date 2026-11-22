@@ -41,10 +41,15 @@ export type TableBase = {
 
 export type Table = TableBase &
   (
-    | { status: 'free' }
-    | { status: 'reserved' }
-    | { status: 'occupied' | 'bill'; guests: number; seatedAt: string; waiter: string }
+    | { status: 'free'; activeOrder: null; nextReservation: null }
+    | { status: 'reserved'; activeOrder: null; nextReservation: NextReservation }
+    | {
+        status: 'busy';
+        activeOrder: ActiveOrderSummary;
+        nextReservation: NextReservation | null;
+      }
   );
+// | { status: 'busy' | 'bill'; guests: number; seatedAt: string; waiter: string }
 
 export type OrderStatus = 'new' | 'cooking' | 'ready' | 'served' | 'paid';
 
@@ -83,3 +88,12 @@ export type User = {
   email: string;
   role: Role;
 };
+
+export type ActiveOrderSummary = {
+  id: string;
+  guests: number;
+  waiterName: string;
+  createdAt: string;
+};
+
+export type NextReservation = { id: string; guestName: string; startsAt: string; guests: number };
