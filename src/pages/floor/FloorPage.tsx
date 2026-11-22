@@ -14,10 +14,9 @@ import type { Zone, TableStatus, Table } from '@/types';
 import Card from '@/components/ui/Card';
 import TableCard from '@/features/floor/TableCard';
 import { useNow } from '@/hooks/useNow';
-import { getTableDetails, getUpcomingReservation } from '@/features/floor/utils';
+import { getTableDetails } from '@/features/floor/utils';
 import TablePanel from '@/features/floor/TablePanel';
 import useTables from '@/features/floor/useTables';
-import useReservations from '@/features/reservations/useReservations';
 import useCloseTable from '@/features/floor/useCloseTable';
 import useSeatTable from '@/features/floor/useSeatTable';
 import useSeatReservation from '@/features/floor/useSeatReservation';
@@ -31,7 +30,6 @@ export default function FloorPage() {
   const zoneTables: Table[] = tables.filter((table) => table.zone === selectedZone);
   const selectedTable = zoneTables.find((table) => table.id === selectedTableId);
 
-  const { data: reservations = [] } = useReservations();
   const { mutate: closeTable, isPending: isClosingTable } = useCloseTable();
   const { mutate: seatTable, isPending: isSeating } = useSeatTable();
   const { mutate: seatReservation, isPending: isSeatingReservation } = useSeatReservation();
@@ -45,9 +43,9 @@ export default function FloorPage() {
     },
     {
       free: 0,
-      occupied: 0,
       reserved: 0,
-      bill: 0,
+      busy: 0,
+      // bill: 0,
     },
   );
 
@@ -119,7 +117,7 @@ export default function FloorPage() {
                     className={`${TABLE_STATUS_STYLES[table.status].className}`}
                     tableInfo={table}
                     tableStatus={TABLE_STATUS_STYLES[table.status].label}
-                    details={getTableDetails(table, reservations, now)}
+                    details={getTableDetails(table, now)}
                     onClick={() => setSelectedTableId(table.id)}
                     aria-pressed={table.id === selectedTableId}
                   ></TableCard>
@@ -132,9 +130,6 @@ export default function FloorPage() {
       <aside className="sticky top-0 h-screen w-80 shrink-0 overflow-y-auto border-l border-line bg-surface p-7">
         <TablePanel
           table={selectedTable}
-          reservation={
-            selectedTable ? getUpcomingReservation(selectedTable.id, reservations) : undefined
-          }
           actions={{
             onCloseTable: closeTable,
             isClosingTable,

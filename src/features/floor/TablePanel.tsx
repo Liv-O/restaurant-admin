@@ -1,4 +1,4 @@
-import type { Reservation, Table } from '@/types';
+import type { Table } from '@/types';
 import { Armchair, MousePointerClickIcon } from 'lucide-react';
 import { TABLE_STATUS_STYLES } from './constants';
 import Button from '@/components/ui/Button';
@@ -20,13 +20,11 @@ type TableActions = {
 
 type TablePanelProps = {
   table: Table | undefined;
-  reservation: Reservation | undefined;
   actions: TableActions;
 };
 
 function renderStatusContent(
   table: Table,
-  reservation: Reservation | undefined,
   {
     onCloseTable,
     isClosingTable,
@@ -46,8 +44,8 @@ function renderStatusContent(
           // isSeating={isSeating}
         />
       );
-    case 'occupied':
-    case 'bill':
+    case 'busy':
+      // case 'bill':
       return (
         <OccupiedTableInfo
           table={table}
@@ -58,7 +56,7 @@ function renderStatusContent(
     case 'reserved':
       return (
         <ReservedTableInfo
-          reservation={reservation}
+          table={table}
           key={table.id}
           onSeatReservation={onSeatReservation}
           isSeatingReservation={isSeatingReservation}
@@ -67,7 +65,7 @@ function renderStatusContent(
   }
 }
 
-export default function TablePanel({ table, reservation, actions }: TablePanelProps) {
+export default function TablePanel({ table, actions }: TablePanelProps) {
   if (!table) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
@@ -93,7 +91,7 @@ export default function TablePanel({ table, reservation, actions }: TablePanelPr
         </span>
       </div>
 
-      {renderStatusContent(table, reservation, actions)}
+      {renderStatusContent(table, actions)}
     </div>
   );
 }
@@ -186,44 +184,34 @@ function FreeTableInfo({ table, onSeatWalkIn }: FreeTableInfoProps) {
   );
 }
 
-function ReservedTableInfo({
-  reservation,
-  onSeatReservation,
-  isSeatingReservation,
-}: {
-  reservation: Reservation | undefined;
+type ReservedTableInfoProps = {
+  table: Extract<Table, { status: 'reserved' }>;
   onSeatReservation: (data: SeatReservationData) => void;
   isSeatingReservation: boolean;
-}) {
+};
+
+function ReservedTableInfo({
+  table,
+  onSeatReservation,
+  isSeatingReservation,
+}: ReservedTableInfoProps) {
+  const reservation = table.nextReservation;
   const [waiter, setWaiter] = useState<string>(WAITERS[0]);
   function handleSeat() {
-    if (!reservation) return;
     onSeatReservation({ reservationId: reservation.id, waiter });
   }
   return (
     <>
-      {reservation ? (
-        <div className="flex flex-col gap-2 rounded-xl border border-tone-blue-ink/20 bg-tone-blue p-4">
-          <span className="text-[13px] font-bold tracking-wider text-tone-blue-ink uppercase">
-            Reservation at {format(reservation.startsAt, 'HH:mm')}
-          </span>
-          <span className="text-lg font-bold">{reservation.guestName}</span>
-          <span className="text-sm text-muted">
-            {reservation.guests} guests
-            {reservation.note && ` · ${reservation.note}`}
-          </span>
-        </div>
-      ) : (
-        <p className="text-sm text-muted">No reservation details</p>
-      )}
+      <div className="flex flex-col gap-2 rounded-xl border border-tone-blue-ink/20 bg-tone-blue p-4">
+        <span className="text-[13px] font-bold tracking-wider text-tone-blue-ink uppercase">
+          Reservation at {format(reservation.startsAt, 'HH:mm')}
+        </span>
+        <span className="text-lg font-bold">{reservation.guestName}</span>
+        <span className="text-sm text-muted">{reservation.guests} guests</span>
+      </div>
       <WaiterSelect value={waiter} onChange={setWaiter} />
       <div className="mt-auto flex flex-col gap-2.5">
-        <Button
-          size="lg"
-          className="w-full"
-          disabled={!reservation || isSeatingReservation}
-          onClick={handleSeat}
-        >
+        <Button size="lg" className="w-full" disabled={isSeatingReservation} onClick={handleSeat}>
           Guests arrived · Seat them
         </Button>
       </div>
@@ -265,7 +253,8 @@ function WaiterSelect({ value, onChange }: WaiterSelectProps) {
 }
 
 type OccupiedTableInfoProps = {
-  table: Extract<Table, { status: 'occupied' | 'bill' }>;
+  table: Extract<Table, { status: 'busy' }>;
+  // table: Extract<Table, { status: 'busy' | 'bill' }>;
   onCloseTable: (id: string) => void;
   isClosingTable: boolean;
 };
@@ -274,11 +263,12 @@ function OccupiedTableInfo({ table, onCloseTable, isClosingTable }: OccupiedTabl
   return (
     <>
       <div className="grid grid-cols-3 gap-2">
-        <InfoTile label="Guests" value={table.guests} />
-        <InfoTile label="Seated" value={format(table.seatedAt, 'HH:mm')} />
-        <InfoTile label="Waiter" value={table.waiter} />
+        <InfoTile label="Guests" value={table.activeOrder.guests} />
+        <InfoTile label="Seated" value={format(table.activeOrder.createdAt, 'HH:mm')} />
+        <InfoTile label="Waiter" value={table.activeOrder.waiterName} />
       </div>
 
+      {/* With 'bill' status the button was shown only for it:
       {table.status === 'bill' && (
         <div className="mt-auto flex flex-col gap-2.5">
           <Button
@@ -290,7 +280,17 @@ function OccupiedTableInfo({ table, onCloseTable, isClosingTable }: OccupiedTabl
             {isClosingTable ? 'Closing...' : 'Close table'}
           </Button>
         </div>
-      )}
+      )} */}
+      <div className="mt-auto flex flex-col gap-2.5">
+        <Button
+          size="lg"
+          className="w-full"
+          onClick={() => onCloseTable(table.id)}
+          disabled={isClosingTable}
+        >
+          {isClosingTable ? 'Closing...' : 'Close table'}
+        </Button>
+      </div>
     </>
   );
 }
