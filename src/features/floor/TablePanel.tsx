@@ -8,6 +8,8 @@ import { WAITERS } from './constants';
 import type { SeatTableData } from './useSeatTable';
 import type { SeatReservationData } from './useSeatReservation';
 import Modal from '@/components/Modal';
+import DishPicker from '../orders/DishPicker';
+import DraftList from '../orders/DraftList';
 
 type TableActions = {
   onCloseTable: (id: string) => void;
@@ -154,15 +156,16 @@ function FreeTableInfo({ table, onSeatWalkIn }: FreeTableInfoProps) {
             +
           </button>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => {
-            setIsOpenMenu(true);
-          }}
-        >
-          Add Items
-        </Button>
       </div>
+      <DraftList tableId={table.id} />
+      <Button
+        variant="outline"
+        onClick={() => {
+          setIsOpenMenu(true);
+        }}
+      >
+        Add Items
+      </Button>
 
       {/* <WaiterSelect value={waiter} onChange={setWaiter} /> */}
       {isOpenMenu && (
@@ -172,7 +175,7 @@ function FreeTableInfo({ table, onSeatWalkIn }: FreeTableInfoProps) {
           }}
           title={`Add items · Table ${table.number}`}
         >
-          Menu will be here
+          <DishPicker tableId={table.id} />
         </Modal>
       )}
 
