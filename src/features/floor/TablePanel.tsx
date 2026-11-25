@@ -1,21 +1,21 @@
-import type { Table } from '@/types';
+import type { CreateOrderBody, Table } from '@/types';
 import { Armchair, MousePointerClickIcon } from 'lucide-react';
 import { TABLE_STATUS_STYLES } from './constants';
 import Button from '@/components/ui/Button';
 import { format } from 'date-fns';
 import { useState, type FormEvent } from 'react';
 import { WAITERS } from './constants';
-import type { SeatTableData } from './useSeatTable';
 import type { SeatReservationData } from './useSeatReservation';
 import Modal from '@/components/Modal';
 import DishPicker from '../orders/DishPicker';
 import DraftList from '../orders/DraftList';
+import useCreateOrder from '../orders/useCreateOrder';
+import { useAppSelector } from '@/store/hooks';
+import { selectDraft } from '@/store/orderDraftsSlice';
 
 type TableActions = {
   onCloseTable: (id: string) => void;
   isClosingTable: boolean;
-  onSeatWalkIn: (data: SeatTableData) => void;
-  isSeating: boolean;
   onSeatReservation: (data: SeatReservationData) => void;
   isSeatingReservation: boolean;
 };
@@ -27,25 +27,11 @@ type TablePanelProps = {
 
 function renderStatusContent(
   table: Table,
-  {
-    onCloseTable,
-    isClosingTable,
-    onSeatWalkIn,
-    // isSeating,
-    onSeatReservation,
-    isSeatingReservation,
-  }: TableActions,
+  { onCloseTable, isClosingTable, onSeatReservation, isSeatingReservation }: TableActions,
 ) {
   switch (table.status) {
     case 'free':
-      return (
-        <FreeTableInfo
-          key={table.id}
-          table={table}
-          onSeatWalkIn={onSeatWalkIn}
-          // isSeating={isSeating}
-        />
-      );
+      return <FreeTableInfo key={table.id} table={table} />;
     case 'busy':
       // case 'bill':
       return (
@@ -100,18 +86,27 @@ export default function TablePanel({ table, actions }: TablePanelProps) {
 
 type FreeTableInfoProps = {
   table: Table;
-  onSeatWalkIn: (data: SeatTableData) => void;
-  // isSeating: boolean;
 };
 
-function FreeTableInfo({ table, onSeatWalkIn }: FreeTableInfoProps) {
+function FreeTableInfo({ table }: FreeTableInfoProps) {
   const [guests, setGuests] = useState(Math.min(2, table.seats));
-  const [waiter, _setWaiter] = useState<string>(WAITERS[0]);
   const [isOpenMenu, setIsOpenMenu] = useState<boolean>(false);
+
+  const draft = useAppSelector((state) => selectDraft(state, table.id));
+  const { mutate: sendOrder, isPending: orderIsSending } = useCreateOrder();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onSeatWalkIn({ id: table.id, guests, waiter });
+    const body: CreateOrderBody = {
+      tableId: table.id,
+      guests,
+      items: draft.map((d) => ({
+        dishId: d.dishId,
+        quantity: d.quantity,
+        ...(d.note && { note: d.note }),
+      })),
+    };
+    sendOrder(body);
   }
 
   return (
@@ -180,8 +175,13 @@ function FreeTableInfo({ table, onSeatWalkIn }: FreeTableInfoProps) {
       )}
 
       <div className="mt-auto flex flex-col gap-2.5">
-        <Button type="submit" size="lg" className="w-full" disabled={true}>
-          {'Send to kitchen'}
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          disabled={draft.length === 0 || orderIsSending}
+        >
+          {orderIsSending ? 'Sending...' : 'Send to kitchen'}
         </Button>
       </div>
     </form>

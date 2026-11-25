@@ -51,20 +51,34 @@ export type Table = TableBase &
   );
 // | { status: 'busy' | 'bill'; guests: number; seatedAt: string; waiter: string }
 
-export type OrderStatus = 'new' | 'cooking' | 'ready' | 'served' | 'paid';
+export type OrderStatus = 'new' | 'cooking' | 'ready' | 'served' | 'paid' | 'cancelled';
 
 export type OrderItem = {
+  id: string;
   dishId: string;
+  dishName: string;
   quantity: number;
-  note?: string;
+  priceAtOrder: number; // in cents, frozen at order time — later menu price changes don't affect it
+  note: string | null;
 };
 
 export type Order = {
   id: string;
-  tableId: string;
-  items: OrderItem[];
+  number: number; // human-friendly order number, e.g. 1048
+  table: Pick<TableBase, 'id' | 'number'>;
+  waiter: Pick<User, 'id' | 'name'>;
   status: OrderStatus;
+  items: OrderItem[];
+  subtotal: number; // in cents
   createdAt: string;
+};
+
+// Body for POST /orders. The schema is strict: no extra fields,
+// and note is either a non-empty string or omitted (never '').
+export type CreateOrderBody = {
+  tableId: string;
+  guests: number;
+  items: (Pick<OrderItem, 'dishId' | 'quantity'> & { note?: string })[];
 };
 
 export type ReservationStatus = (typeof RESERVATION_STATUSES)[number];
