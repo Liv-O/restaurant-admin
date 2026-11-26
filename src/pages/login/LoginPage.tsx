@@ -42,7 +42,7 @@ export default function LoginPage() {
           </ul>
         </div>
 
-        <p className="text-[13px] text-white/50">Portfolio project · React + TypeScript + NestJS</p>
+        <p className="text-[13px] text-white/50">React + TypeScript + NestJS</p>
       </aside>
 
       {/* Right: form */}
