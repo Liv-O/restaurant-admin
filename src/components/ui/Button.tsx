@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'outline' | 'danger';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'outline' | 'danger' | 'info';
 type Size = 'md' | 'lg' | 'sm' | 'icon' | 'icon-sm';
 
 type ButtonProps = ComponentProps<'button'> & {
@@ -14,6 +14,7 @@ const variants: Record<Variant, string> = {
   ghost: 'bg-transparent text-ink enabled:hover:bg-bg',
   outline: 'border border-primary bg-white text-primary enabled:hover:bg-primary/10',
   danger: 'bg-danger text-white enabled:hover:bg-danger/90',
+  info: 'bg-status-new text-white enabled:hover:bg-status-new/90',
 };
 
 const sizes: Record<Size, string> = {

@@ -27,6 +27,10 @@
   --color-danger: #a33a2e;
   --color-danger-soft: #fdf6f5;
 
+  --color-status-new: #3d6a9e;
+  --color-status-cooking: #d4893a;
+  --color-status-ready: #3d8a63;
+
   --font-display: 'Fraunces', serif;
   --font-sans: 'Manrope', system-ui, sans-serif;
 }
