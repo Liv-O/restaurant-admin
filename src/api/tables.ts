@@ -8,26 +8,26 @@ export async function getTables(): Promise<Table[]> {
   return neededZoneTables;
 }
 
-export async function closeTable(_id: string): Promise<Table> {
-  // await delay(400);
-  // const tableIndex = db.tables.findIndex((table) => table.id === id);
-  // if (tableIndex === -1) {
-  //   throw new Error('Table not found');
-  // }
-  // if (db.tables[tableIndex].status === 'free') {
-  //   throw new Error('Table is already free');
-  // }
-  // const newTableData: Table = {
-  //   id: db.tables[tableIndex].id,
-  //   number: db.tables[tableIndex].number,
-  //   seats: db.tables[tableIndex].seats,
-  //   status: 'free',
-  //   zone: db.tables[tableIndex].zone,
-  // };
-  // db.tables[tableIndex] = newTableData;
-  // return structuredClone(newTableData);
-  throw new Error('Not implemented yet');
-}
+// export async function closeTable(_id: string): Promise<Table> {
+//   // await delay(400);
+//   // const tableIndex = db.tables.findIndex((table) => table.id === id);
+//   // if (tableIndex === -1) {
+//   //   throw new Error('Table not found');
+//   // }
+//   // if (db.tables[tableIndex].status === 'free') {
+//   //   throw new Error('Table is already free');
+//   // }
+//   // const newTableData: Table = {
+//   //   id: db.tables[tableIndex].id,
+//   //   number: db.tables[tableIndex].number,
+//   //   seats: db.tables[tableIndex].seats,
+//   //   status: 'free',
+//   //   zone: db.tables[tableIndex].zone,
+//   // };
+//   // db.tables[tableIndex] = newTableData;
+//   // return structuredClone(newTableData);
+//   throw new Error('Not implemented yet');
+// }
 
 // export async function seatTable(
 //   _id: string,

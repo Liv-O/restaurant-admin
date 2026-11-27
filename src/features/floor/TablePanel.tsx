@@ -1,5 +1,5 @@
 import type { CreateOrderBody, Table } from '@/types';
-import { Armchair, MousePointerClickIcon } from 'lucide-react';
+import { Armchair, LoaderCircle, MousePointerClickIcon, Plus } from 'lucide-react';
 import { TABLE_STATUS_STYLES } from './constants';
 import Button from '@/components/ui/Button';
 import { format } from 'date-fns';
@@ -12,10 +12,14 @@ import DraftList from '../orders/DraftList';
 import useCreateOrder from '../orders/useCreateOrder';
 import { useAppSelector } from '@/store/hooks';
 import { selectDraft } from '@/store/orderDraftsSlice';
+import useOrder from '../orders/useOrder';
+import { draftToOrderItems } from '../orders/utils';
+import { ORDER_NEXT_ACTION, ORDER_STATUS_STYLES } from '../orders/constants';
+import { formatPrice } from '@/lib/formatPrice';
+import useUpdateOrderStatus from '../kitchen/useUpdateOrderStatus';
+import useAddOrderItems from '../orders/useAddOrderItems';
 
 type TableActions = {
-  onCloseTable: (id: string) => void;
-  isClosingTable: boolean;
   onSeatReservation: (data: SeatReservationData) => void;
   isSeatingReservation: boolean;
 };
@@ -27,20 +31,14 @@ type TablePanelProps = {
 
 function renderStatusContent(
   table: Table,
-  { onCloseTable, isClosingTable, onSeatReservation, isSeatingReservation }: TableActions,
+  { onSeatReservation, isSeatingReservation }: TableActions,
 ) {
   switch (table.status) {
     case 'free':
       return <FreeTableInfo key={table.id} table={table} />;
     case 'busy':
       // case 'bill':
-      return (
-        <OccupiedTableInfo
-          table={table}
-          onCloseTable={onCloseTable}
-          isClosingTable={isClosingTable}
-        />
-      );
+      return <OccupiedTableInfo table={table} />;
     case 'reserved':
       return (
         <ReservedTableInfo
@@ -100,11 +98,7 @@ function FreeTableInfo({ table }: FreeTableInfoProps) {
     const body: CreateOrderBody = {
       tableId: table.id,
       guests,
-      items: draft.map((d) => ({
-        dishId: d.dishId,
-        quantity: d.quantity,
-        ...(d.note && { note: d.note }),
-      })),
+      items: draftToOrderItems(draft),
     };
     sendOrder(body);
   }
@@ -259,11 +253,16 @@ function WaiterSelect({ value, onChange }: WaiterSelectProps) {
 type OccupiedTableInfoProps = {
   table: Extract<Table, { status: 'busy' }>;
   // table: Extract<Table, { status: 'busy' | 'bill' }>;
-  onCloseTable: (id: string) => void;
-  isClosingTable: boolean;
 };
 
-function OccupiedTableInfo({ table, onCloseTable, isClosingTable }: OccupiedTableInfoProps) {
+function OccupiedTableInfo({ table }: OccupiedTableInfoProps) {
+  const { data: order, isLoading: orderLoading } = useOrder(table.activeOrder.id);
+  const { mutate: updateOrderStatus, isPending: isUpdatingOrderStatus } = useUpdateOrderStatus();
+  const draft = useAppSelector((state) => selectDraft(state, table.id));
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { mutate: addItems, isPending: isAddingItems } = useAddOrderItems();
+  const nextAction = order ? ORDER_NEXT_ACTION[order.status] : undefined;
+  const isNew = order?.status === 'new';
   return (
     <>
       <div className="grid grid-cols-3 gap-2">
@@ -271,6 +270,114 @@ function OccupiedTableInfo({ table, onCloseTable, isClosingTable }: OccupiedTabl
         <InfoTile label="Seated" value={format(table.activeOrder.createdAt, 'HH:mm')} />
         <InfoTile label="Waiter" value={table.activeOrder.waiterName} />
       </div>
+
+      {orderLoading || !order ? (
+        <LoaderCircle className="animate-spin" />
+      ) : (
+        <>
+          <section className="flex flex-col gap-3">
+            <div className="flex items-baseline justify-between">
+              <h3 className="text-base font-bold text-ink">Order #{order.number}</h3>
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs font-bold ${ORDER_STATUS_STYLES[order.status].className}`}
+              >
+                {ORDER_STATUS_STYLES[order.status].label}
+              </span>
+            </div>
+
+            <ul className="flex flex-col divide-y divide-input">
+              {order.items.map((item) => (
+                <li className="flex items-start gap-3 py-3 text-sm" key={item.id}>
+                  <span className="w-6 shrink-0 font-bold text-primary">{item.quantity}x</span>
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="font-medium text-ink">{item.dishName}</span>
+                    {item.note && <span className="text-xs text-tone-amber-ink">{item.note}</span>}
+                  </div>
+                  <span className="shrink-0 font-medium text-ink">
+                    {formatPrice(item.priceAtOrder * item.quantity)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex items-center justify-between border-t border-input pt-3">
+              <span className="text-base font-bold">Subtotal</span>
+              <span className="text-lg font-bold text-ink">{formatPrice(order.subtotal)}</span>
+            </div>
+          </section>
+
+          {isNew && draft.length > 0 && (
+            <section className="rounded-xl bg-bg p-3">
+              <DraftList tableId={table.id} title="To add" />
+            </section>
+          )}
+
+          <div className="mt-auto flex flex-col gap-2.5">
+            {isNew && (
+              <>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setIsMenuOpen(true);
+                  }}
+                >
+                  <Plus className="size-4" aria-hidden="true" />
+                  Add items
+                </Button>
+
+                {draft.length > 0 && (
+                  <Button
+                    size="lg"
+                    className="w-full"
+                    onClick={() => {
+                      addItems({
+                        orderId: order.id,
+                        tableId: table.id,
+                        items: draftToOrderItems(draft),
+                      });
+                    }}
+                    disabled={isAddingItems}
+                  >
+                    {isAddingItems ? 'Adding…' : 'Add to order'}
+                  </Button>
+                )}
+              </>
+            )}
+
+            {nextAction && (
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={() =>
+                  updateOrderStatus({
+                    id: order.id,
+                    status: nextAction.nextStatus,
+                  })
+                }
+                disabled={isUpdatingOrderStatus}
+              >
+                {isUpdatingOrderStatus ? 'Updating...' : nextAction.label}
+              </Button>
+            )}
+
+            {!isNew && !nextAction && (
+              <p className="text-center text-sm text-muted">Waiting for the kitchen…</p>
+            )}
+          </div>
+
+          {isMenuOpen && (
+            <Modal
+              title={`Add items · Table ${table.number}`}
+              onClose={() => {
+                setIsMenuOpen(false);
+              }}
+            >
+              <DishPicker tableId={table.id} />
+            </Modal>
+          )}
+        </>
+      )}
 
       {/* With 'bill' status the button was shown only for it:
       {table.status === 'bill' && (
@@ -285,16 +392,6 @@ function OccupiedTableInfo({ table, onCloseTable, isClosingTable }: OccupiedTabl
           </Button>
         </div>
       )} */}
-      <div className="mt-auto flex flex-col gap-2.5">
-        <Button
-          size="lg"
-          className="w-full"
-          onClick={() => onCloseTable(table.id)}
-          disabled={isClosingTable}
-        >
-          {isClosingTable ? 'Closing...' : 'Close table'}
-        </Button>
-      </div>
     </>
   );
 }
