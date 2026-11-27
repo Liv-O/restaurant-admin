@@ -12,9 +12,10 @@ import {
 
 type DraftListProps = {
   tableId: string;
+  title?: string;
 };
 
-export default function DraftList({ tableId }: DraftListProps) {
+export default function DraftList({ tableId, title = 'New order' }: DraftListProps) {
   const { data: dishes } = useDishes();
   const items = useAppSelector((state) => selectDraft(state, tableId));
   const count = useAppSelector((state) => selectDraftCount(state, tableId));
@@ -40,7 +41,7 @@ export default function DraftList({ tableId }: DraftListProps) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
-        <h3 className="text-[13px] font-bold">New order</h3>
+        <h3 className="text-[13px] font-bold">{title}</h3>
         <span className="text-xs text-muted">
           {count} {count === 1 ? 'item' : 'items'}
         </span>

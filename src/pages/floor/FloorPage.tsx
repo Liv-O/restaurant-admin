@@ -17,7 +17,6 @@ import { useNow } from '@/hooks/useNow';
 import { getTableDetails } from '@/features/floor/utils';
 import TablePanel from '@/features/floor/TablePanel';
 import useTables from '@/features/floor/useTables';
-import useCloseTable from '@/features/floor/useCloseTable';
 import useSeatReservation from '@/features/floor/useSeatReservation';
 
 export default function FloorPage() {
@@ -29,7 +28,6 @@ export default function FloorPage() {
   const zoneTables: Table[] = tables.filter((table) => table.zone === selectedZone);
   const selectedTable = zoneTables.find((table) => table.id === selectedTableId);
 
-  const { mutate: closeTable, isPending: isClosingTable } = useCloseTable();
   const { mutate: seatReservation, isPending: isSeatingReservation } = useSeatReservation();
 
   const now = useNow(60_000);
@@ -129,8 +127,6 @@ export default function FloorPage() {
         <TablePanel
           table={selectedTable}
           actions={{
-            onCloseTable: closeTable,
-            isClosingTable,
             onSeatReservation: seatReservation,
             isSeatingReservation,
           }}
