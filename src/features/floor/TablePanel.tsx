@@ -1,9 +1,9 @@
-import type { CreateOrderBody, Table } from '@/types';
+import type { Table } from '@/types';
 import { Armchair, LoaderCircle, MousePointerClickIcon, Plus } from 'lucide-react';
 import { TABLE_STATUS_STYLES } from './constants';
 import Button from '@/components/ui/Button';
 import { format } from 'date-fns';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { WAITERS } from './constants';
 import type { SeatReservationData } from './useSeatReservation';
 import Modal from '@/components/Modal';
@@ -18,6 +18,7 @@ import { ORDER_NEXT_ACTION, ORDER_STATUS_STYLES } from '../orders/constants';
 import { formatPrice } from '@/lib/formatPrice';
 import useUpdateOrderStatus from '../kitchen/useUpdateOrderStatus';
 import useAddOrderItems from '../orders/useAddOrderItems';
+import NewOrderForm from '../orders/NewOrderForm';
 
 type TableActions = {
   onSeatReservation: (data: SeatReservationData) => void;
@@ -87,24 +88,10 @@ type FreeTableInfoProps = {
 };
 
 function FreeTableInfo({ table }: FreeTableInfoProps) {
-  const [guests, setGuests] = useState(Math.min(2, table.seats));
-  const [isOpenMenu, setIsOpenMenu] = useState<boolean>(false);
-
-  const draft = useAppSelector((state) => selectDraft(state, table.id));
   const { mutate: sendOrder, isPending: orderIsSending } = useCreateOrder();
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const body: CreateOrderBody = {
-      tableId: table.id,
-      guests,
-      items: draftToOrderItems(draft),
-    };
-    sendOrder(body);
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-5">
+    <div className="flex flex-1 flex-col gap-5">
       <div className="flex flex-col items-center gap-3 pt-4 text-center">
         <div className="flex size-14 items-center justify-center rounded-full bg-tone-green text-tone-green-ink">
           <Armchair className="size-6" aria-hidden="true" />
@@ -113,72 +100,14 @@ function FreeTableInfo({ table }: FreeTableInfoProps) {
         <p className="text-sm text-muted">Up to {table.seats} guests</p>
       </div>
 
-      {/* Guests stepper */}
-      <div className="flex flex-col gap-1.5">
-        <span id="walkin-guests-label" className="text-[13px] font-bold">
-          Guests
-        </span>
-        <div
-          role="group"
-          aria-labelledby="walkin-guests-label"
-          className="flex h-11 items-center overflow-hidden rounded-[10px] border border-input"
-        >
-          <button
-            type="button"
-            aria-label="Fewer guests"
-            className="size-11 shrink-0 bg-bg font-bold disabled:cursor-not-allowed disabled:opacity-40"
-            onClick={() => setGuests((g) => g - 1)}
-            disabled={guests <= 1}
-          >
-            −
-          </button>
-          <span aria-live="polite" className="flex-1 text-center font-medium">
-            {guests} {guests === 1 ? 'guest' : 'guests'}
-          </span>
-          <button
-            type="button"
-            aria-label="More guests"
-            className="size-11 shrink-0 bg-bg font-bold disabled:cursor-not-allowed disabled:opacity-40"
-            onClick={() => setGuests((g) => g + 1)}
-            disabled={guests >= table.seats}
-          >
-            +
-          </button>
-        </div>
-      </div>
-      <DraftList tableId={table.id} />
-      <Button
-        variant="outline"
-        onClick={() => {
-          setIsOpenMenu(true);
-        }}
-      >
-        Add Items
-      </Button>
-
-      {/* <WaiterSelect value={waiter} onChange={setWaiter} /> */}
-      {isOpenMenu && (
-        <Modal
-          onClose={() => {
-            setIsOpenMenu(false);
-          }}
-          title={`Add items · Table ${table.number}`}
-        >
-          <DishPicker tableId={table.id} />
-        </Modal>
-      )}
-
-      <div className="mt-auto flex flex-col gap-2.5">
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full"
-          disabled={draft.length === 0 || orderIsSending}
-        >
-          {orderIsSending ? 'Sending...' : 'Send to kitchen'}
-        </Button>
-      </div>
-    </form>
+      <NewOrderForm
+        table={table}
+        defaultGuests={2}
+        submitLabel="Send to kitchen"
+        isSubmitting={orderIsSending}
+        onSubmit={sendOrder}
+      />
+    </div>
   );
 }
 
