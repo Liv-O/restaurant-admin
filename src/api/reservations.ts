@@ -15,6 +15,7 @@ export async function createReservation(
     guests: reservation.guests,
     startsAt: reservation.startsAt,
     ...(reservation.note && { note: reservation.note }),
+    ...(reservation.tableId && { tableId: reservation.tableId }),
   };
   const response = await api.post<Reservation>('/reservations', body);
   return response.data;

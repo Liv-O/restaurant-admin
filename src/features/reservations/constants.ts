@@ -23,5 +23,3 @@ export const TIME_SLOTS = Array.from(
   },
 );
 // ['12:00', '12:30', ..., '22:30']
-
-export const tableNumbers = Array.from({ length: 20 }, (_, i) => i + 1); // [1, 2, ..., 20]
