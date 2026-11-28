@@ -8,9 +8,6 @@ export const TABLE_STATUSES = ['free', 'reserved', 'busy'] as const;
 // 'bill' is disabled for now — may come back as a separate step after 'busy'.
 // export const TABLE_STATUSES = ['free', 'reserved', 'busy', 'bill'] as const;
 
-// Temporary list until real staff accounts exist.
-export const WAITERS = ['Anna', 'Max', 'Sofia'] as const;
-
 export const ZONES_LABELS: Record<Zone, string> = {
   main: 'Main Hall',
   terrace: 'Terrace',

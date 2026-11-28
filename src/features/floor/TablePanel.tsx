@@ -1,11 +1,10 @@
-import type { Table } from '@/types';
+import type { CreateOrderBody, Table } from '@/types';
 import { Armchair, LoaderCircle, MousePointerClickIcon, Plus } from 'lucide-react';
 import { TABLE_STATUS_STYLES } from './constants';
 import Button from '@/components/ui/Button';
 import { format } from 'date-fns';
 import { useState } from 'react';
-import { WAITERS } from './constants';
-import type { SeatReservationData } from './useSeatReservation';
+
 import Modal from '@/components/Modal';
 import DishPicker from '../orders/DishPicker';
 import DraftList from '../orders/DraftList';
@@ -19,21 +18,14 @@ import { formatPrice } from '@/lib/formatPrice';
 import useUpdateOrderStatus from '../kitchen/useUpdateOrderStatus';
 import useAddOrderItems from '../orders/useAddOrderItems';
 import NewOrderForm from '../orders/NewOrderForm';
-
-type TableActions = {
-  onSeatReservation: (data: SeatReservationData) => void;
-  isSeatingReservation: boolean;
-};
+import useReservations from '../reservations/useReservations';
+import useUpdateReservation from '../reservations/useUpdateReservation';
 
 type TablePanelProps = {
   table: Table | undefined;
-  actions: TableActions;
 };
 
-function renderStatusContent(
-  table: Table,
-  { onSeatReservation, isSeatingReservation }: TableActions,
-) {
+function renderStatusContent(table: Table) {
   switch (table.status) {
     case 'free':
       return <FreeTableInfo key={table.id} table={table} />;
@@ -41,18 +33,11 @@ function renderStatusContent(
       // case 'bill':
       return <OccupiedTableInfo table={table} />;
     case 'reserved':
-      return (
-        <ReservedTableInfo
-          table={table}
-          key={table.id}
-          onSeatReservation={onSeatReservation}
-          isSeatingReservation={isSeatingReservation}
-        />
-      );
+      return <ReservedTableInfo table={table} key={table.id} />;
   }
 }
 
-export default function TablePanel({ table, actions }: TablePanelProps) {
+export default function TablePanel({ table }: TablePanelProps) {
   if (!table) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
@@ -78,7 +63,7 @@ export default function TablePanel({ table, actions }: TablePanelProps) {
         </span>
       </div>
 
-      {renderStatusContent(table, actions)}
+      {renderStatusContent(table)}
     </div>
   );
 }
@@ -111,36 +96,58 @@ function FreeTableInfo({ table }: FreeTableInfoProps) {
   );
 }
 
+// type ReservedTableInfoProps = {
+//   table: Extract<Table, { status: 'reserved' }>;
+//   onSeatReservation: (data: SeatReservationData) => void;
+//   isSeatingReservation: boolean;
+// };
+
 type ReservedTableInfoProps = {
   table: Extract<Table, { status: 'reserved' }>;
-  onSeatReservation: (data: SeatReservationData) => void;
-  isSeatingReservation: boolean;
 };
 
-function ReservedTableInfo({
-  table,
-  onSeatReservation,
-  isSeatingReservation,
-}: ReservedTableInfoProps) {
+function ReservedTableInfo({ table }: ReservedTableInfoProps) {
   const reservation = table.nextReservation;
-  const [waiter, setWaiter] = useState<string>(WAITERS[0]);
-  function handleSeat() {
-    onSeatReservation({ reservationId: reservation.id, waiter });
+  const { data: reservations = [] } = useReservations();
+  const createOrder = useCreateOrder();
+  const updateReservation = useUpdateReservation();
+
+  const fullReservation = reservations.find((reserv) => reserv.id === reservation.id);
+
+  async function handleSeat(body: CreateOrderBody) {
+    try {
+      await createOrder.mutateAsync(body);
+      if (fullReservation?.status === 'pending')
+        await updateReservation.mutateAsync({
+          id: reservation.id,
+          reservationData: { status: 'confirmed' },
+        });
+      await updateReservation.mutateAsync({
+        id: reservation.id,
+        reservationData: { status: 'seated' },
+      });
+    } catch {
+      //   помилку вже показав toast у хуці
+    }
   }
   return (
     <>
-      <div className="flex flex-col gap-2 rounded-xl border border-tone-blue-ink/20 bg-tone-blue p-4">
-        <span className="text-[13px] font-bold tracking-wider text-tone-blue-ink uppercase">
-          Reservation at {format(reservation.startsAt, 'HH:mm')}
-        </span>
-        <span className="text-lg font-bold">{reservation.guestName}</span>
-        <span className="text-sm text-muted">{reservation.guests} guests</span>
-      </div>
-      <WaiterSelect value={waiter} onChange={setWaiter} />
-      <div className="mt-auto flex flex-col gap-2.5">
-        <Button size="lg" className="w-full" disabled={isSeatingReservation} onClick={handleSeat}>
-          Guests arrived · Seat them
-        </Button>
+      <div className="flex flex-1 flex-col gap-5">
+        <div className="flex flex-col gap-2 rounded-xl border border-tone-blue-ink/20 bg-tone-blue p-4">
+          <span className="text-[13px] font-bold tracking-wider text-tone-blue-ink uppercase">
+            Reservation at {format(reservation.startsAt, 'HH:mm')}
+          </span>
+          <span className="text-lg font-bold">{reservation.guestName}</span>
+          <span className="text-sm text-muted">{reservation.guests} guests</span>
+        </div>
+
+        <NewOrderForm
+          table={table}
+          defaultGuests={reservation.guests}
+          submitLabel="Seat & send to kitchen"
+          isSubmitting={createOrder.isPending || updateReservation.isPending}
+          onSubmit={handleSeat}
+        />
       </div>
     </>
   );
@@ -155,29 +162,29 @@ function InfoTile({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-type WaiterSelectProps = {
-  value: string;
-  onChange: (waiter: string) => void;
-};
+// type WaiterSelectProps = {
+//   value: string;
+//   onChange: (waiter: string) => void;
+// };
 
-function WaiterSelect({ value, onChange }: WaiterSelectProps) {
-  return (
-    <label className="flex flex-col gap-1.5 text-[13px] font-bold">
-      Waiter
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-11 rounded-[10px] border border-input bg-surface px-3 text-[15px] font-medium focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/15 focus-visible:outline-none"
-      >
-        {WAITERS.map((name) => (
-          <option key={name} value={name}>
-            {name}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
+// function WaiterSelect({ value, onChange }: WaiterSelectProps) {
+//   return (
+//     <label className="flex flex-col gap-1.5 text-[13px] font-bold">
+//       Waiter
+//       <select
+//         value={value}
+//         onChange={(e) => onChange(e.target.value)}
+//         className="h-11 rounded-[10px] border border-input bg-surface px-3 text-[15px] font-medium focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/15 focus-visible:outline-none"
+//       >
+//         {WAITERS.map((name) => (
+//           <option key={name} value={name}>
+//             {name}
+//           </option>
+//         ))}
+//       </select>
+//     </label>
+//   );
+// }
 
 type OccupiedTableInfoProps = {
   table: Extract<Table, { status: 'busy' }>;
