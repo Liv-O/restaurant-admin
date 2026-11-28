@@ -1,8 +1,10 @@
 import { Outlet } from 'react-router';
 
 import Sidebar from './Sidebar';
+import { useRealtime } from '@/hooks/useRealtime';
 
 export default function AppLayout() {
+  useRealtime();
   return (
     <div className="flex min-h-screen">
       <Sidebar />

@@ -3,6 +3,8 @@ import OrderCard from '@/features/kitchen/OrderCard';
 import useOrders from '@/features/kitchen/useOrders';
 import useUpdateOrderStatus from '@/features/kitchen/useUpdateOrderStatus';
 import { useNow } from '@/hooks/useNow';
+import { useAppSelector } from '@/store/hooks';
+import { selectIsConnected } from '@/store/realtimeSlice';
 import type { Order, OrderStatus } from '@/types';
 import { compareAsc } from 'date-fns';
 
@@ -25,10 +27,38 @@ export default function KitchenPage() {
   const cookingOrders = sortedOrders.filter((o) => o.status === 'cooking');
   const readyOrders = sortedOrders.filter((o) => o.status === 'ready');
   const activeOrdersCount = newOrders.length + readyOrders.length + cookingOrders.length;
+  const isConnected = useAppSelector((state) => selectIsConnected(state));
 
   return (
     <>
-      <PageHeader title="Kitchen display" subtitle={`${activeOrdersCount} active orders`} />
+      <PageHeader
+        title="Kitchen display"
+        subtitle={
+          <span
+            className={`flex items-center gap-2 text-sm font-medium ${
+              isConnected ? 'text-tone-green-ink' : 'text-muted'
+            }`}
+          >
+            <span
+              className={`size-2 rounded-full ${
+                isConnected ? 'animate-pulse bg-status-ready' : 'bg-muted'
+              }`}
+              aria-hidden="true"
+            />
+            {isConnected ? 'Live · updates in real time' : 'Reconnecting…'}
+          </span>
+        }
+        action={
+          <div className="flex flex-col items-end">
+            <span className="text-[11px] font-bold tracking-wider text-muted uppercase">
+              Active orders
+            </span>
+            <span className="font-display text-2xl font-semibold text-ink">
+              {activeOrdersCount}
+            </span>
+          </div>
+        }
+      />
       <div className="mt-6 grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
         <KitchenColumn
           title="New"

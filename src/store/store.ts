@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import orderDraftsSlice from '@/store/orderDraftsSlice';
+import realtimeSlice from './realtimeSlice';
 
 export const store = configureStore({
   reducer: {
     orderDrafts: orderDraftsSlice,
+    realtime: realtimeSlice,
   },
 });
 
