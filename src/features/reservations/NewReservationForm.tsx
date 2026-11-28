@@ -4,8 +4,10 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import FormField from '@/components/ui/FormField';
 import { format, isBefore, parse } from 'date-fns';
-import { tableNumbers, TIME_SLOTS } from './constants';
+import { TIME_SLOTS } from './constants';
 import type { Reservation } from '@/types';
+import useTables from '../floor/useTables';
+import { ZONES_LABELS } from '../floor/constants';
 
 const MIN_QTY = 1;
 const MAX_QTY = 20;
@@ -39,7 +41,7 @@ const newReservationSchema = z
       .int()
       .min(MIN_QTY, `At least ${MIN_QTY}`)
       .max(MAX_QTY, `No more than ${MAX_QTY}`),
-    tableNumber: z.string().optional(),
+    tableId: z.string().optional(),
     status: z.enum(['pending', 'confirmed']),
     note: z.string().max(200, 'Note must be at most 200 characters').optional(),
   })
@@ -67,7 +69,7 @@ export default function NewReservationForm({
     date: format(chosenDate, 'yyyy-MM-dd'),
     time: '',
     partySize: 2,
-    tableNumber: '',
+    tableId: '',
     status: 'pending',
     note: '',
   };
@@ -78,7 +80,7 @@ export default function NewReservationForm({
       date: format(reservationData.startsAt, 'yyyy-MM-dd'),
       time: format(reservationData.startsAt, 'HH:mm'),
       partySize: reservationData.guests,
-      tableNumber: reservationData.tableId ?? '',
+      tableId: reservationData.tableId ?? '',
       status: reservationData.status as 'pending' | 'confirmed',
       note: reservationData.note ?? '',
     };
@@ -95,7 +97,7 @@ export default function NewReservationForm({
 
   function onSubmit(data: NewReservationValues) {
     const newReservation: Omit<Reservation, 'id'> = {
-      tableId: data.tableNumber || null,
+      tableId: data.tableId || null,
       guestName: data.guestName,
       phone: data.guestPhone,
       guests: data.partySize,
@@ -106,13 +108,17 @@ export default function NewReservationForm({
 
     onSave(newReservation);
   }
-
-  const quantity = useWatch({ control, name: 'partySize' }); // поточне число; компонент перерендериться, коли воно зміниться
-
+  const { data: tables = [] } = useTables();
+  const quantity = useWatch({ control, name: 'partySize' });
+  // Keep the reservation's current table even if it's too small now,
+  // otherwise the select silently falls back to "No table" and saving drops it.
+  const suitableTables = tables.filter(
+    (table) => table.seats >= quantity || table.id === reservationData?.tableId,
+  );
   function changeQuantity(delta: number) {
     setValue('partySize', quantity + delta, { shouldValidate: true });
   }
-  // TODO (day 3): tableId is not sent yet — load real tables from GET /tables
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-3.5">
@@ -208,21 +214,17 @@ export default function NewReservationForm({
           )}
         </div>
 
-        <FormField
-          label="Table Number"
-          error={errors.tableNumber?.message}
-          errorId="tableNumber-error"
-        >
+        <FormField label="Table" error={errors.tableId?.message} errorId="tableId-error">
           <select
             className="h-11 rounded-[10px] border border-input px-3 text-[15px] font-medium focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/15 focus-visible:outline-none aria-invalid:border-danger aria-invalid:bg-danger-soft"
-            aria-describedby="tableNumber-error"
-            aria-invalid={!!errors.tableNumber}
-            {...register('tableNumber')}
+            aria-describedby="tableId-error"
+            aria-invalid={!!errors.tableId}
+            {...register('tableId')}
           >
-            <option value="">Assign later</option>
-            {tableNumbers.map((number) => (
-              <option key={number} value={number}>
-                Table {number}
+            <option value="">No table</option>
+            {suitableTables.map((table) => (
+              <option key={table.id} value={table.id}>
+                T{table.number} · {table.seats} seats · {ZONES_LABELS[table.zone]}
               </option>
             ))}
           </select>

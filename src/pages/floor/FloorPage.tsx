@@ -17,7 +17,6 @@ import { useNow } from '@/hooks/useNow';
 import { getTableDetails } from '@/features/floor/utils';
 import TablePanel from '@/features/floor/TablePanel';
 import useTables from '@/features/floor/useTables';
-import useSeatReservation from '@/features/floor/useSeatReservation';
 
 export default function FloorPage() {
   const [selectedZone, setSelectedZone] = useState<Zone>('main');
@@ -27,8 +26,6 @@ export default function FloorPage() {
 
   const zoneTables: Table[] = tables.filter((table) => table.zone === selectedZone);
   const selectedTable = zoneTables.find((table) => table.id === selectedTableId);
-
-  const { mutate: seatReservation, isPending: isSeatingReservation } = useSeatReservation();
 
   const now = useNow(60_000);
 
@@ -124,13 +121,7 @@ export default function FloorPage() {
         </Card>
       </div>
       <aside className="sticky top-0 h-screen w-80 shrink-0 overflow-y-auto border-l border-line bg-surface p-7">
-        <TablePanel
-          table={selectedTable}
-          actions={{
-            onSeatReservation: seatReservation,
-            isSeatingReservation,
-          }}
-        />
+        <TablePanel table={selectedTable} />
       </aside>
     </div>
   );

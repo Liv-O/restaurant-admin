@@ -20,6 +20,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import useReservations from '@/features/reservations/useReservations';
 import useUpdateReservation from '@/features/reservations/useUpdateReservation';
 import useCreateReservation from '@/features/reservations/useCreateReservation';
+import useTables from '@/features/floor/useTables';
 
 type StatusFilter = (typeof RESERVATION_STATUSES)[number] | 'All';
 
@@ -41,6 +42,7 @@ export default function ReservationsPage() {
     useUpdateReservation();
   const { mutate: createReservation, isPending: isCreateReservationPending } =
     useCreateReservation();
+  const { data: tables = [] } = useTables();
 
   const [modal, setModal] = useState<ReservationModal>({ mode: 'closed' });
 
@@ -112,6 +114,7 @@ export default function ReservationsPage() {
           id: modal.reservation.id,
           reservationData: {
             ...(status !== modal.reservation.status && { status: status }),
+            ...(tableId !== modal.reservation.tableId && { tableId }),
             ...rest,
           },
         },
@@ -130,6 +133,11 @@ export default function ReservationsPage() {
         },
       });
     }
+  }
+
+  function getTableLabel(tableId: string | null) {
+    const table = tables.find((t) => t.id === tableId);
+    return table ? `T${table.number}` : '—';
   }
 
   return (
@@ -212,9 +220,9 @@ export default function ReservationsPage() {
                       <span> {reservation.guests} </span>
                     </div>
                   </Table.Cell>
-                  <Table.Cell>{reservation.tableId ? `T${reservation.tableId}` : '-'}</Table.Cell>
+                  <Table.Cell>{getTableLabel(reservation.tableId)}</Table.Cell>
                   <Table.Cell className="text-muted">
-                    <p className="max-w-56 truncate">{reservation.note ? reservation.note : '-'}</p>
+                    <p className="max-w-56 truncate">{reservation.note ?? '-'}</p>
                   </Table.Cell>
                   <Table.Cell>
                     <Badge
